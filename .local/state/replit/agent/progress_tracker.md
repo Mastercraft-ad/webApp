@@ -122,13 +122,14 @@ Build a comprehensive Personal Note-Taking System integrated with a Bible study 
 - **Rich Text**: TipTap with extensions for formatting, tables, links, etc.
 
 ## Responsive UI - Mobile, Tablet, Desktop (December 2024)
-- [x] Bible Reader Page - Mobile Improvements:
-  - [x] Mobile toolbar with collapsible book/chapter selector (Sheet)
+- [x] Bible Reader Page - Mobile Improvements (Revised):
+  - [x] Inline collapsible book/chapter picker (no disruptive sheets)
   - [x] Mobile-friendly verse display with touch-optimized actions
-  - [x] Study Tools Sheet (slide-in from right) for mobile
-  - [x] Mobile bottom navigation with chapter quick-select
-  - [x] Verse action bar at bottom for highlights, bookmarks, sharing
-  - [x] Separate desktop view with ResizablePanel for study tools
+  - [x] Study Tools as inline collapsible section below content
+  - [x] Inline chapter navigation strip at bottom
+  - [x] Sticky verse action bar at bottom for highlights, bookmarks, sharing
+  - [x] Single-column layout with min-h-screen for proper mobile viewing
+  - [x] Desktop view maintains ResizablePanel for study tools
 - [x] Audio & Sermons Page - Mobile Improvements:
   - [x] Responsive tabs with abbreviations on mobile
   - [x] Mobile filter sheet (slide-up from bottom)
