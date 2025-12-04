@@ -6,8 +6,10 @@ import {
   Map, History, Languages, PanelRightClose, PanelRightOpen, X,
   MoreHorizontal, Image as ImageIcon, Download, Copy, Facebook, Twitter,
   ExternalLink, Minimize2, Grid, List, Layers, Type, SplitSquareHorizontal,
-  BookA, Globe, User, MapPin, Folder, FolderPlus, FileJson, FileType
+  BookA, Globe, User, MapPin, Folder, FolderPlus, FileJson, FileType,
+  Menu, ChevronDown
 } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Slider } from "@/components/ui/slider";
@@ -63,6 +65,10 @@ export default function BiblePage() {
   const [bookmarks, setBookmarks] = useState<Record<number, string[]>>({}); // verseNum -> folderIds
   const [showImageGenerator, setShowImageGenerator] = useState(false);
   const [interlinearMode, setInterlinearMode] = useState(false);
+  const [mobileStudyOpen, setMobileStudyOpen] = useState(false);
+  const [selectedBook, setSelectedBook] = useState("Genesis");
+  const [selectedChapter, setSelectedChapter] = useState("1");
+  const [selectedVersion, setSelectedVersion] = useState("NIV");
 
   const handleVerseClick = (verseNum: number) => {
     setSelectedVerse(verseNum === selectedVerse ? null : verseNum);
@@ -104,29 +110,131 @@ export default function BiblePage() {
   return (
     <Layout>
       <div className="h-[calc(100vh-8rem)] flex flex-col">
-        {/* Main Toolbar */}
-        <div className="h-14 border border-border rounded-t-xl flex items-center justify-between px-4 bg-card/50 backdrop-blur-sm mb-2">
+        {/* Main Toolbar - Mobile */}
+        <div className="md:hidden h-12 border border-border rounded-t-xl flex items-center justify-between px-2 bg-card/50 backdrop-blur-sm mb-2">
+           <Sheet>
+             <SheetTrigger asChild>
+               <Button variant="ghost" size="sm" className="gap-1 font-bold text-sm px-2" data-testid="button-book-selector-mobile">
+                 <BookOpen className="h-4 w-4" />
+                 {selectedBook} {selectedChapter}
+                 <ChevronDown className="h-3 w-3" />
+               </Button>
+             </SheetTrigger>
+             <SheetContent side="bottom" className="h-[70vh] rounded-t-xl">
+               <SheetHeader>
+                 <SheetTitle>Select Book & Chapter</SheetTitle>
+               </SheetHeader>
+               <div className="mt-4">
+                 <Tabs defaultValue="ot">
+                   <TabsList className="grid w-full grid-cols-2">
+                     <TabsTrigger value="ot">Old Testament</TabsTrigger>
+                     <TabsTrigger value="nt">New Testament</TabsTrigger>
+                   </TabsList>
+                   <TabsContent value="ot">
+                     <ScrollArea className="h-[40vh]">
+                       <div className="grid grid-cols-2 gap-2 p-2">
+                         {BOOKS.OT.map(b => (
+                           <Button 
+                             key={b} 
+                             variant={selectedBook === b ? "secondary" : "ghost"} 
+                             size="sm" 
+                             className="justify-start text-xs"
+                             onClick={() => setSelectedBook(b)}
+                           >
+                             {b}
+                           </Button>
+                         ))}
+                       </div>
+                     </ScrollArea>
+                   </TabsContent>
+                   <TabsContent value="nt">
+                     <ScrollArea className="h-[40vh]">
+                       <div className="grid grid-cols-2 gap-2 p-2">
+                         {BOOKS.NT.map(b => (
+                           <Button 
+                             key={b} 
+                             variant={selectedBook === b ? "secondary" : "ghost"} 
+                             size="sm" 
+                             className="justify-start text-xs"
+                             onClick={() => setSelectedBook(b)}
+                           >
+                             {b}
+                           </Button>
+                         ))}
+                       </div>
+                     </ScrollArea>
+                   </TabsContent>
+                 </Tabs>
+                 <div className="mt-4">
+                   <p className="text-sm font-medium mb-2">Chapter</p>
+                   <ScrollArea className="h-24">
+                     <div className="flex flex-wrap gap-1">
+                       {Array.from({length: 50}, (_, i) => i + 1).map(num => (
+                         <Button 
+                           key={num} 
+                           variant={selectedChapter === num.toString() ? "secondary" : "ghost"} 
+                           size="sm" 
+                           className="w-10 h-8 text-xs"
+                           onClick={() => setSelectedChapter(num.toString())}
+                         >
+                           {num}
+                         </Button>
+                       ))}
+                     </div>
+                   </ScrollArea>
+                 </div>
+               </div>
+             </SheetContent>
+           </Sheet>
+
+           <div className="flex items-center gap-1">
+             <Select value={selectedVersion} onValueChange={setSelectedVersion}>
+               <SelectTrigger className="w-16 h-8 text-xs border-none bg-transparent" data-testid="select-version-mobile">
+                 <SelectValue />
+               </SelectTrigger>
+               <SelectContent>
+                 <SelectItem value="NIV">NIV</SelectItem>
+                 <SelectItem value="ESV">ESV</SelectItem>
+                 <SelectItem value="KJV">KJV</SelectItem>
+                 <SelectItem value="NASB">NASB</SelectItem>
+               </SelectContent>
+             </Select>
+             
+             <Button 
+               variant="ghost" 
+               size="icon" 
+               className="h-8 w-8"
+               onClick={() => setMobileStudyOpen(true)}
+               data-testid="button-study-tools-mobile"
+             >
+               <Library className="h-4 w-4" />
+             </Button>
+           </div>
+        </div>
+
+        {/* Main Toolbar - Desktop */}
+        <div className="hidden md:flex h-14 border border-border rounded-t-xl items-center justify-between px-4 bg-card/50 backdrop-blur-sm mb-2">
            <div className="flex items-center gap-2">
-             <Select defaultValue="Genesis">
-               <SelectTrigger className="w-[140px] h-9 border-none bg-transparent hover:bg-accent/50 focus:ring-0 font-bold">
+             <Select value={selectedBook} onValueChange={setSelectedBook}>
+               <SelectTrigger className="w-[140px] h-9 border-none bg-transparent hover:bg-accent/50 focus:ring-0 font-bold" data-testid="select-book-desktop">
                  <SelectValue placeholder="Book" />
                </SelectTrigger>
                <SelectContent>
                  <div className="grid grid-cols-2 gap-2 p-2 w-[400px]">
                    <div>
                      <div className="text-xs font-bold text-muted-foreground mb-2 px-2">OT</div>
-                     {BOOKS.OT.slice(0, 10).map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+                     {BOOKS.OT.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
                    </div>
                    <div>
                      <div className="text-xs font-bold text-muted-foreground mb-2 px-2">NT</div>
-                     {BOOKS.NT.slice(0, 10).map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+                     {BOOKS.NT.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
                    </div>
                  </div>
                </SelectContent>
              </Select>
 
-             <Select defaultValue="1">
-                <SelectTrigger className="w-[70px] h-9 border-none bg-transparent hover:bg-accent/50 focus:ring-0 font-bold">
+             <Select value={selectedChapter} onValueChange={setSelectedChapter}>
+                <SelectTrigger className="w-[70px] h-9 border-none bg-transparent hover:bg-accent/50 focus:ring-0 font-bold" data-testid="select-chapter-desktop">
                   <SelectValue placeholder="Ch" />
                 </SelectTrigger>
                 <SelectContent>
@@ -138,8 +246,8 @@ export default function BiblePage() {
 
              <div className="h-4 w-px bg-border mx-1"></div>
 
-             <Select defaultValue="NIV">
-               <SelectTrigger className="w-[80px] h-9 border-none bg-transparent hover:bg-accent/50 focus:ring-0">
+             <Select value={selectedVersion} onValueChange={setSelectedVersion}>
+               <SelectTrigger className="w-[80px] h-9 border-none bg-transparent hover:bg-accent/50 focus:ring-0" data-testid="select-version-desktop">
                  <SelectValue placeholder="Version" />
                </SelectTrigger>
                <SelectContent>
@@ -151,13 +259,13 @@ export default function BiblePage() {
                </SelectContent>
              </Select>
 
-             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setInterlinearMode(!interlinearMode)} title="Interlinear Mode">
+             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setInterlinearMode(!interlinearMode)} title="Interlinear Mode" data-testid="button-interlinear">
                 <Languages className={cn("h-4 w-4", interlinearMode ? "text-primary" : "text-muted-foreground")} />
              </Button>
            </div>
 
            <div className="flex items-center gap-2">
-              <div className="hidden md:flex items-center gap-1 mr-2">
+              <div className="hidden lg:flex items-center gap-1 mr-2">
                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                    <Type className="h-4 w-4" />
                  </Button>
@@ -168,6 +276,7 @@ export default function BiblePage() {
                    step={1} 
                    value={[fontSize]} 
                    onValueChange={(val) => setFontSize(val[0])} 
+                   data-testid="slider-font-size"
                  />
               </div>
               
@@ -176,6 +285,7 @@ export default function BiblePage() {
                 size="sm" 
                 onClick={() => setShowTools(!showTools)}
                 className="gap-2"
+                data-testid="button-study-tools-desktop"
               >
                 <Library className="h-4 w-4" />
                 <span className="hidden sm:inline">Study Tools</span>
@@ -183,15 +293,184 @@ export default function BiblePage() {
            </div>
         </div>
 
-        {/* Workspace */}
-        <ResizablePanelGroup direction="horizontal" className="flex-1 rounded-xl border border-border overflow-hidden bg-background">
+        {/* Workspace - Mobile */}
+        <div className="md:hidden flex-1 rounded-xl border border-border overflow-hidden bg-background">
+          <div className="h-full flex flex-col bg-card">
+            <ScrollArea className="flex-1 p-4">
+              <div className="max-w-3xl mx-auto pb-20">
+                <h1 className="font-serif text-2xl sm:text-3xl font-bold text-center mb-2">{selectedBook} {selectedChapter}</h1>
+                <p className="text-center text-muted-foreground mb-6 font-sans text-xs uppercase tracking-widest">The Beginning</p>
+                  
+                <div className="prose dark:prose-invert max-w-none font-serif leading-relaxed transition-all" style={{ fontSize: `${Math.max(fontSize - 2, 14)}px` }}>
+                  {Array.from({length: 31}, (_, i) => i + 1).map((verseNum) => {
+                    const isSelected = selectedVerse === verseNum;
+                    const highlightColor = highlights[verseNum];
+                    const colorData = HIGHLIGHT_COLORS.find(c => c.id === highlightColor);
+                    
+                    return (
+                      <div 
+                        key={verseNum}
+                        className={cn(
+                          "relative py-2 px-2 -mx-2 rounded transition-colors duration-200 cursor-pointer group",
+                          isSelected ? "bg-primary/10 ring-1 ring-primary/20" : "active:bg-accent/50",
+                          highlightColor && colorData ? colorData.color : ""
+                        )}
+                        onClick={() => handleVerseClick(verseNum)}
+                        data-testid={`verse-mobile-${verseNum}`}
+                      >
+                        <span className="text-xs font-bold text-muted-foreground mr-2 select-none font-sans relative top-[-0.3em]">{verseNum}</span>
+                        
+                        <span>
+                          In the beginning God created the heavens and the earth.
+                          {verseNum === 2 && " Now the earth was formless and empty, darkness was over the surface of the deep, and the Spirit of God was hovering over the waters."}
+                          {verseNum === 3 && " And God said, \"Let there be light,\" and there was light."}
+                          {verseNum > 3 && " Lorem ipsum dolor sit amet, consectetur adipiscing elit."}
+                        </span>
+                        
+                        {bookmarks[verseNum] && (
+                          <Bookmark className="absolute right-1 top-2 h-3 w-3 text-primary fill-primary opacity-50" />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </ScrollArea>
+            
+            {/* Mobile Verse Actions */}
+            {selectedVerse !== null && (
+              <div className="border-t border-border p-2 bg-card/95 backdrop-blur-sm">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-medium text-muted-foreground">Verse {selectedVerse}</span>
+                  <div className="flex items-center gap-1">
+                    {HIGHLIGHT_COLORS.slice(0, 4).map(color => (
+                      <button 
+                        key={color.id}
+                        className={cn("w-6 h-6 rounded-full border", color.color, color.border, highlights[selectedVerse] === color.id && "ring-2 ring-offset-1 ring-primary")}
+                        onClick={() => toggleHighlight(color.id)}
+                        data-testid={`button-highlight-${color.id}-mobile`}
+                      />
+                    ))}
+                    <div className="w-px h-4 bg-border mx-1" />
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toggleBookmark()} data-testid="button-bookmark-mobile">
+                      <Bookmark className={cn("h-4 w-4", bookmarks[selectedVerse] ? "fill-primary text-primary" : "")} />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" data-testid="button-share-mobile">
+                      <Share2 className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSelectedVerse(null)} data-testid="button-close-verse-mobile">
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Mobile Bottom Navigation */}
+            <div className="h-12 border-t border-border flex items-center justify-between px-3 bg-card/50">
+               <Button variant="ghost" size="sm" className="text-muted-foreground text-xs px-2" data-testid="button-prev-chapter-mobile">
+                 <ChevronLeft className="h-4 w-4" /> Prev
+               </Button>
+               <ScrollArea className="flex-1 mx-2">
+                 <div className="flex items-center justify-center gap-1">
+                   {[1, 2, 3, 4, 5].map(ch => (
+                     <div key={ch} className={cn(
+                       "px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-colors whitespace-nowrap",
+                       ch === parseInt(selectedChapter) ? "bg-primary text-primary-foreground" : "hover:bg-accent"
+                     )}>
+                       {ch}
+                     </div>
+                   ))}
+                 </div>
+               </ScrollArea>
+               <Button variant="ghost" size="sm" className="text-muted-foreground text-xs px-2" data-testid="button-next-chapter-mobile">
+                 Next <ChevronRight className="h-4 w-4" />
+               </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Study Tools Sheet */}
+        <Sheet open={mobileStudyOpen} onOpenChange={setMobileStudyOpen}>
+          <SheetContent side="right" className="w-full sm:w-[400px] p-0">
+            <div className="h-full flex flex-col">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+                <div className="border-b border-border px-4 pt-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="font-bold">Study Tools</h2>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setMobileStudyOpen(false)}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <ScrollArea className="w-full whitespace-nowrap pb-2">
+                    <TabsList className="w-max justify-start p-0 h-10 bg-transparent">
+                      <TabsTrigger value="study" className="text-xs px-3">Study</TabsTrigger>
+                      <TabsTrigger value="reference" className="text-xs px-3">Reference</TabsTrigger>
+                      <TabsTrigger value="compare" className="text-xs px-3">Compare</TabsTrigger>
+                      <TabsTrigger value="original" className="text-xs px-3">Original</TabsTrigger>
+                      <TabsTrigger value="notes" className="text-xs px-3">Notes</TabsTrigger>
+                      <TabsTrigger value="maps" className="text-xs px-3">Maps</TabsTrigger>
+                    </TabsList>
+                  </ScrollArea>
+                </div>
+
+                <div className="flex-1 overflow-hidden">
+                  <TabsContent value="study" className="h-full m-0 overflow-hidden flex flex-col">
+                    <div className="p-3 border-b border-border">
+                       <Select value={selectedCommentary} onValueChange={setSelectedCommentary}>
+                         <SelectTrigger className="w-full text-sm">
+                           <SelectValue placeholder="Select Commentary" />
+                         </SelectTrigger>
+                         <SelectContent>
+                           {COMMENTARIES.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                         </SelectContent>
+                       </Select>
+                    </div>
+                    <ScrollArea className="flex-1">
+                      <div className="p-3 space-y-4">
+                        <div className="bg-muted/30 rounded-lg p-3 border border-border">
+                           <h3 className="font-bold text-sm mb-2">Verse Analysis {selectedVerse ? `(v.${selectedVerse})` : ''}</h3>
+                           <p className="text-xs leading-relaxed text-muted-foreground">
+                             {selectedVerse === 1 
+                               ? "This opening verse of the Bible serves as a formal introduction to the entire Pentateuch." 
+                               : "Select a verse to see detailed commentary."}
+                           </p>
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-sm mb-2">Cross References</h3>
+                          <div className="space-y-2">
+                            {['John 1:1', 'Psalm 33:6', 'Isaiah 45:18'].map((ref, i) => (
+                              <div key={i} className="p-2 rounded-lg border border-border bg-card text-xs">
+                                <span className="font-bold text-primary">{ref}</span>
+                                <p className="text-muted-foreground mt-1 line-clamp-2">
+                                  In the beginning was the Word...
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </ScrollArea>
+                  </TabsContent>
+
+                  <TabsContent value="notes" className="h-full m-0 overflow-hidden flex flex-col">
+                     <NotesList verseReference={`${selectedBook} ${selectedChapter}`} />
+                  </TabsContent>
+                </div>
+              </Tabs>
+            </div>
+          </SheetContent>
+        </Sheet>
+
+        {/* Workspace - Desktop */}
+        <ResizablePanelGroup direction="horizontal" className="hidden md:flex flex-1 rounded-xl border border-border overflow-hidden bg-background">
           
           {/* Main Reader Panel */}
           <ResizablePanel defaultSize={70} minSize={30}>
             <div className="h-full flex flex-col bg-card">
-              <ScrollArea className="flex-1 p-6 md:p-12">
+              <ScrollArea className="flex-1 p-6 lg:p-12">
                 <div className="max-w-3xl mx-auto pb-20">
-                  <h1 className="font-serif text-4xl font-bold text-center mb-2">Genesis 1</h1>
+                  <h1 className="font-serif text-3xl lg:text-4xl font-bold text-center mb-2">{selectedBook} {selectedChapter}</h1>
                   <p className="text-center text-muted-foreground mb-10 font-sans text-sm uppercase tracking-widest">The Beginning</p>
                   
                   <div className="prose prose-lg dark:prose-invert max-w-none font-serif leading-loose transition-all" style={{ fontSize: `${fontSize}px` }}>

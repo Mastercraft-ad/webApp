@@ -121,11 +121,28 @@ Build a comprehensive Personal Note-Taking System integrated with a Bible study 
 - **UI Components**: Shadcn UI, Tailwind CSS
 - **Rich Text**: TipTap with extensions for formatting, tables, links, etc.
 
+## Responsive UI - Mobile, Tablet, Desktop (December 2024)
+- [x] Bible Reader Page - Mobile Improvements:
+  - [x] Mobile toolbar with collapsible book/chapter selector (Sheet)
+  - [x] Mobile-friendly verse display with touch-optimized actions
+  - [x] Study Tools Sheet (slide-in from right) for mobile
+  - [x] Mobile bottom navigation with chapter quick-select
+  - [x] Verse action bar at bottom for highlights, bookmarks, sharing
+  - [x] Separate desktop view with ResizablePanel for study tools
+- [x] Audio & Sermons Page - Mobile Improvements:
+  - [x] Responsive tabs with abbreviations on mobile
+  - [x] Mobile filter sheet (slide-up from bottom)
+  - [x] Sermon cards optimized for mobile with smaller images and text
+  - [x] Mobile player mini-bar with expand to full-screen sheet
+  - [x] Queue management via sheet on mobile
+  - [x] Touch-friendly controls and button sizes
+
 ## Current Status
 ✅ Core note-taking functionality is working end-to-end
 ✅ Users can create, edit, delete, and search notes
 ✅ Rich text editor with comprehensive formatting options
 ✅ Categories, tags, and templates are functional
+✅ Responsive UI for Bible Reader and Audio pages (mobile, tablet, desktop)
 🚧 Advanced features (verse linking, attachments, sharing, export) are pending
 
 ## Next Steps

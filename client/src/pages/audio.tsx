@@ -580,14 +580,113 @@ export default function AudioPage() {
                   data-testid="input-search"
                 />
               </div>
+              {/* Filter Button - Desktop */}
               <Button 
                 variant="outline" 
                 size="icon"
                 onClick={() => setShowFilters(!showFilters)}
                 data-testid="button-filter"
+                className="hidden sm:flex"
               >
                 <Filter className="h-4 w-4" />
               </Button>
+              
+              {/* Filter Button - Mobile (opens sheet) */}
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="icon"
+                    data-testid="button-filter-mobile"
+                    className="sm:hidden"
+                  >
+                    <Filter className="h-4 w-4" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="h-[70vh] rounded-t-xl">
+                  <SheetHeader>
+                    <SheetTitle>Filter Sermons</SheetTitle>
+                  </SheetHeader>
+                  <ScrollArea className="h-[calc(100%-4rem)] mt-4">
+                    <div className="space-y-4 pb-4">
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Speaker</label>
+                        <Select>
+                          <SelectTrigger data-testid="select-speaker-mobile">
+                            <SelectValue placeholder="Any speaker" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {preachers.map(p => (
+                              <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Church</label>
+                        <Select>
+                          <SelectTrigger data-testid="select-church-mobile">
+                            <SelectValue placeholder="Any church" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {churches.map(c => (
+                              <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Bible Passage</label>
+                        <Input placeholder="e.g., John 3:16" data-testid="input-passage-mobile" />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Topic</label>
+                        <Select>
+                          <SelectTrigger data-testid="select-topic-mobile">
+                            <SelectValue placeholder="Any topic" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="faith">Faith</SelectItem>
+                            <SelectItem value="grace">Grace</SelectItem>
+                            <SelectItem value="prayer">Prayer</SelectItem>
+                            <SelectItem value="love">Love</SelectItem>
+                            <SelectItem value="hope">Hope</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Series</label>
+                        <Select>
+                          <SelectTrigger data-testid="select-series-mobile">
+                            <SelectValue placeholder="Any series" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {sermonSeries.map(s => (
+                              <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Date</label>
+                        <Select>
+                          <SelectTrigger data-testid="select-date-mobile">
+                            <SelectValue placeholder="Any time" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="week">Past week</SelectItem>
+                            <SelectItem value="month">Past month</SelectItem>
+                            <SelectItem value="year">Past year</SelectItem>
+                            <SelectItem value="all">All time</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Button className="w-full mt-4">Apply Filters</Button>
+                    </div>
+                  </ScrollArea>
+                </SheetContent>
+              </Sheet>
+              
               <Sheet open={showQueueSheet} onOpenChange={setShowQueueSheet}>
                 <SheetTrigger asChild>
                   <Button variant="outline" size="icon" className="lg:hidden" data-testid="button-queue-mobile">
@@ -610,9 +709,9 @@ export default function AudioPage() {
           </div>
 
           {showFilters && (
-            <Card className="mb-4 flex-shrink-0">
+            <Card className="mb-4 flex-shrink-0 hidden sm:block">
               <CardContent className="p-3 sm:p-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
                   <div>
                     <label className="text-xs sm:text-sm font-medium mb-1.5 sm:mb-2 block">Speaker</label>
                     <Select>
