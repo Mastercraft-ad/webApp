@@ -5,7 +5,8 @@ import {
   ChevronLeft, ChevronRight, Volume2, BookOpen, Library, FileText,
   Map, History, Languages, PanelRightClose, PanelRightOpen, X,
   MoreHorizontal, Image as ImageIcon, Download, Copy, Facebook, Twitter,
-  ExternalLink, Minimize2, Grid, List, Layers, Type
+  ExternalLink, Minimize2, Grid, List, Layers, Type, SplitSquareHorizontal,
+  BookA, Globe, User, MapPin, Folder, FolderPlus, FileJson, FileType
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -58,7 +59,7 @@ export default function BiblePage() {
   const [activeTab, setActiveTab] = useState("study");
   const [selectedCommentary, setSelectedCommentary] = useState("mh");
   const [highlights, setHighlights] = useState<Record<number, string>>({ 8: 'yellow' });
-  const [bookmarks, setBookmarks] = useState<number[]>([]);
+  const [bookmarks, setBookmarks] = useState<Record<number, string[]>>({}); // verseNum -> folderIds
   const [showImageGenerator, setShowImageGenerator] = useState(false);
   const [interlinearMode, setInterlinearMode] = useState(false);
 
@@ -82,13 +83,21 @@ export default function BiblePage() {
     });
   };
 
-  const toggleBookmark = () => {
+  const toggleBookmark = (folderId: string = 'default') => {
     if (selectedVerse === null) return;
-    setBookmarks(prev => 
-      prev.includes(selectedVerse) 
-        ? prev.filter(v => v !== selectedVerse) 
-        : [...prev, selectedVerse]
-    );
+    setBookmarks(prev => {
+      const currentFolders = prev[selectedVerse] || [];
+      if (currentFolders.includes(folderId)) {
+        const newFolders = currentFolders.filter(id => id !== folderId);
+        if (newFolders.length === 0) {
+          const { [selectedVerse]: _, ...rest } = prev;
+          return rest;
+        }
+        return { ...prev, [selectedVerse]: newFolders };
+      } else {
+        return { ...prev, [selectedVerse]: [...currentFolders, folderId] };
+      }
+    });
   };
 
   return (
@@ -210,9 +219,33 @@ export default function BiblePage() {
                                  />
                                ))}
                                <div className="w-px h-4 bg-border mx-1" />
-                               <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); toggleBookmark(); }}>
-                                 <Bookmark className={cn("h-3 w-3", bookmarks.includes(verseNum) ? "fill-primary text-primary" : "")} />
-                               </Button>
+                               
+                               <Popover>
+                                 <PopoverTrigger asChild>
+                                   <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => e.stopPropagation()}>
+                                     <Bookmark className={cn("h-3 w-3", bookmarks[verseNum] ? "fill-primary text-primary" : "")} />
+                                   </Button>
+                                 </PopoverTrigger>
+                                 <PopoverContent className="w-48 p-2" onClick={(e) => e.stopPropagation()}>
+                                   <p className="text-xs font-bold mb-2 px-2">Save to Folder</p>
+                                   <div className="space-y-1">
+                                     <Button variant="ghost" size="sm" className="w-full justify-start h-7 text-xs" onClick={() => toggleBookmark('favorites')}>
+                                       <Folder className="h-3 w-3 mr-2 text-yellow-500" /> Favorites
+                                     </Button>
+                                     <Button variant="ghost" size="sm" className="w-full justify-start h-7 text-xs" onClick={() => toggleBookmark('study')}>
+                                       <Folder className="h-3 w-3 mr-2 text-blue-500" /> Bible Study
+                                     </Button>
+                                     <Button variant="ghost" size="sm" className="w-full justify-start h-7 text-xs" onClick={() => toggleBookmark('sermon')}>
+                                       <Folder className="h-3 w-3 mr-2 text-green-500" /> Sermon Prep
+                                     </Button>
+                                     <Separator className="my-1" />
+                                     <Button variant="ghost" size="sm" className="w-full justify-start h-7 text-xs">
+                                       <FolderPlus className="h-3 w-3 mr-2" /> New Folder
+                                     </Button>
+                                   </div>
+                                 </PopoverContent>
+                               </Popover>
+
                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); setShowImageGenerator(true); }}>
                                  <ImageIcon className="h-3 w-3" />
                                </Button>
@@ -242,7 +275,7 @@ export default function BiblePage() {
                              </span>
                           )}
                           
-                          {bookmarks.includes(verseNum) && (
+                          {bookmarks[verseNum] && (
                             <Bookmark className="absolute right-0 top-2 h-3 w-3 text-primary fill-primary opacity-50" />
                           )}
                         </div>
@@ -277,7 +310,7 @@ export default function BiblePage() {
           {showTools && (
             <>
               <ResizableHandle />
-              <ResizablePanel defaultSize={30} minSize={20} maxSize={45}>
+              <ResizablePanel defaultSize={30} minSize={20} maxSize={50}>
                 <div className="h-full flex flex-col bg-card">
                   <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
                     <div className="border-b border-border">
@@ -285,6 +318,12 @@ export default function BiblePage() {
                         <TabsList className="w-full justify-start p-0 h-12 bg-transparent">
                           <TabsTrigger value="study" className="h-full px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-accent/50">
                             <BookOpen className="h-4 w-4 mr-2" /> Study
+                          </TabsTrigger>
+                          <TabsTrigger value="reference" className="h-full px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-accent/50">
+                            <BookA className="h-4 w-4 mr-2" /> Reference
+                          </TabsTrigger>
+                          <TabsTrigger value="compare" className="h-full px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-accent/50">
+                            <SplitSquareHorizontal className="h-4 w-4 mr-2" /> Compare
                           </TabsTrigger>
                           <TabsTrigger value="original" className="h-full px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-accent/50">
                             <Languages className="h-4 w-4 mr-2" /> Original
@@ -351,6 +390,120 @@ export default function BiblePage() {
                         </ScrollArea>
                       </TabsContent>
 
+                      {/* Reference Tab (Dictionary, Topical, etc) */}
+                      <TabsContent value="reference" className="h-full m-0 overflow-hidden flex flex-col">
+                        <Tabs defaultValue="dictionary" className="flex-1 flex flex-col">
+                           <div className="px-4 pt-2">
+                              <TabsList className="w-full grid grid-cols-3">
+                                <TabsTrigger value="dictionary">Dictionary</TabsTrigger>
+                                <TabsTrigger value="topical">Topical</TabsTrigger>
+                                <TabsTrigger value="people">People</TabsTrigger>
+                              </TabsList>
+                           </div>
+                           
+                           <TabsContent value="dictionary" className="flex-1 p-0 m-0 mt-2">
+                             <ScrollArea className="h-full">
+                               <div className="p-4 space-y-4">
+                                 <div className="relative">
+                                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <Input placeholder="Search Dictionary..." className="pl-8" />
+                                 </div>
+                                 <div className="space-y-4">
+                                   <div>
+                                      <h4 className="font-bold text-primary">Creation</h4>
+                                      <p className="text-sm text-muted-foreground mt-1">The act of God in bringing the universe into existence. The Bible opens with the majestic statement: "In the beginning God created..."</p>
+                                   </div>
+                                   <Separator />
+                                   <div>
+                                      <h4 className="font-bold text-primary">Cosmology</h4>
+                                      <p className="text-sm text-muted-foreground mt-1">The study of the origin, evolution, and structure of the universe.</p>
+                                   </div>
+                                 </div>
+                               </div>
+                             </ScrollArea>
+                           </TabsContent>
+
+                           <TabsContent value="topical" className="flex-1 p-0 m-0 mt-2">
+                             <ScrollArea className="h-full">
+                               <div className="p-4 space-y-4">
+                                  <div className="flex flex-wrap gap-2">
+                                     {['God', 'Creation', 'Light', 'Water', 'Time', 'Life', 'Nature'].map(topic => (
+                                       <Badge key={topic} variant="outline" className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors">{topic}</Badge>
+                                     ))}
+                                  </div>
+                                  <div className="bg-muted/30 rounded-lg p-4">
+                                     <h4 className="font-bold mb-2">God (Creator)</h4>
+                                     <ul className="space-y-2 text-sm text-muted-foreground">
+                                        <li className="flex justify-between border-b border-border pb-1"><span>Genesis 1:1</span> <ArrowRightIcon className="h-3 w-3" /></li>
+                                        <li className="flex justify-between border-b border-border pb-1"><span>Isaiah 40:28</span> <ArrowRightIcon className="h-3 w-3" /></li>
+                                        <li className="flex justify-between border-b border-border pb-1"><span>Revelation 4:11</span> <ArrowRightIcon className="h-3 w-3" /></li>
+                                     </ul>
+                                  </div>
+                               </div>
+                             </ScrollArea>
+                           </TabsContent>
+                           
+                           <TabsContent value="people" className="flex-1 p-0 m-0 mt-2">
+                              <ScrollArea className="h-full">
+                                 <div className="p-4 space-y-4">
+                                    <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card hover:bg-accent/10 cursor-pointer">
+                                       <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                          <User className="h-5 w-5" />
+                                       </div>
+                                       <div>
+                                          <p className="font-bold text-sm">Adam</p>
+                                          <p className="text-xs text-muted-foreground">The first man.</p>
+                                       </div>
+                                    </div>
+                                 </div>
+                              </ScrollArea>
+                           </TabsContent>
+                        </Tabs>
+                      </TabsContent>
+
+                      {/* Compare Tab */}
+                      <TabsContent value="compare" className="h-full m-0 overflow-hidden flex flex-col">
+                        <ScrollArea className="flex-1">
+                           <div className="p-4 space-y-6">
+                              {selectedVerse ? (
+                                <div className="space-y-4">
+                                   <h3 className="font-bold text-center pb-2 border-b border-border">Genesis 1:{selectedVerse}</h3>
+                                   
+                                   <div className="space-y-1">
+                                      <Badge variant="outline">NIV</Badge>
+                                      <p className="text-sm leading-relaxed">In the beginning God created the heavens and the earth.</p>
+                                   </div>
+                                   
+                                   <div className="space-y-1">
+                                      <Badge variant="outline">ESV</Badge>
+                                      <p className="text-sm leading-relaxed">In the beginning, God created the heavens and the earth.</p>
+                                   </div>
+                                   
+                                   <div className="space-y-1">
+                                      <Badge variant="outline">KJV</Badge>
+                                      <p className="text-sm leading-relaxed font-serif">In the beginning God created the heaven and the earth.</p>
+                                   </div>
+                                   
+                                   <div className="space-y-1">
+                                      <Badge variant="outline">NASB</Badge>
+                                      <p className="text-sm leading-relaxed">In the beginning God created the heavens and the earth.</p>
+                                   </div>
+                                   
+                                   <div className="space-y-1">
+                                      <Badge variant="outline">MSG</Badge>
+                                      <p className="text-sm leading-relaxed italic">First this: God created the Heavens and Earth—all you see, all you don't see.</p>
+                                   </div>
+                                </div>
+                              ) : (
+                                <div className="flex flex-col items-center justify-center h-64 text-muted-foreground text-center p-6">
+                                   <SplitSquareHorizontal className="h-10 w-10 mb-4 opacity-20" />
+                                   <p>Select a verse to compare translations side-by-side.</p>
+                                </div>
+                              )}
+                           </div>
+                        </ScrollArea>
+                      </TabsContent>
+
                       {/* Original Language Tab */}
                       <TabsContent value="original" className="h-full m-0 overflow-hidden flex flex-col">
                          <div className="p-4 border-b border-border bg-muted/10 flex justify-between items-center">
@@ -398,9 +551,14 @@ export default function BiblePage() {
                       <TabsContent value="notes" className="h-full m-0 overflow-hidden flex flex-col">
                          <div className="p-4 border-b border-border flex justify-between items-center">
                             <h3 className="font-bold text-sm">My Annotations</h3>
-                            <Button size="sm" variant="outline" className="h-7 text-xs gap-1">
-                               <Layers className="h-3 w-3" /> Filter
-                            </Button>
+                            <div className="flex gap-1">
+                               <Button size="sm" variant="ghost" className="h-7 w-7 p-0" title="Export Notes">
+                                  <Download className="h-4 w-4" />
+                               </Button>
+                               <Button size="sm" variant="outline" className="h-7 text-xs gap-1">
+                                  <Layers className="h-3 w-3" /> Filter
+                               </Button>
+                            </div>
                          </div>
                          <ScrollArea className="flex-1">
                             <div className="p-4 space-y-4">
@@ -557,4 +715,24 @@ export default function BiblePage() {
       </Dialog>
     </Layout>
   );
+}
+
+function ArrowRightIcon(props: any) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M5 12h14" />
+      <path d="m12 5 7 7-7 7" />
+    </svg>
+  )
 }
