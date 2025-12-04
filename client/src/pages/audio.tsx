@@ -11,13 +11,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -84,7 +83,8 @@ import {
   ListPlus,
   CheckCircle2,
   PlayCircle,
-  PauseCircle
+  PauseCircle,
+  Menu
 } from "lucide-react";
 
 const sermonCategories = [
@@ -286,6 +286,8 @@ export default function AudioPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [newComment, setNewComment] = useState("");
   const [userRating, setUserRating] = useState(0);
+  const [showQueueSheet, setShowQueueSheet] = useState(false);
+  const [showPlayerSheet, setShowPlayerSheet] = useState(false);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -307,44 +309,272 @@ export default function AudioPage() {
     return matchesCategory && matchesSearch;
   });
 
+  const QueueContent = () => (
+    <div className="flex flex-col h-full">
+      <div className="flex-1 overflow-y-auto">
+        <div className="space-y-2">
+          {mockQueue.map((sermon, i) => (
+            <div 
+              key={sermon.id} 
+              className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer group"
+              data-testid={`queue-item-${sermon.id}`}
+            >
+              <span className="text-sm text-muted-foreground w-4">{i + 1}</span>
+              <div className="h-10 w-10 rounded overflow-hidden flex-shrink-0">
+                <img src={sermon.image} alt={sermon.title} className="h-full w-full object-cover" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{sermon.title}</p>
+                <p className="text-xs text-muted-foreground truncate">{sermon.preacher}</p>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 opacity-0 group-hover:opacity-100"
+                data-testid={`button-remove-queue-${sermon.id}`}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      </div>
+      <Separator className="my-4" />
+      <div>
+        <h4 className="font-bold text-sm mb-3">Recommendations</h4>
+        <div className="space-y-2">
+          {mockSermons.slice(3, 6).map(sermon => (
+            <div 
+              key={sermon.id}
+              className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer"
+              data-testid={`recommendation-${sermon.id}`}
+            >
+              <div className="h-10 w-10 rounded overflow-hidden flex-shrink-0">
+                <img src={sermon.image} alt={sermon.title} className="h-full w-full object-cover" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{sermon.title}</p>
+                <p className="text-xs text-muted-foreground truncate">{sermon.preacher}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  const FullPlayerContent = () => (
+    <div className="flex flex-col h-full p-4">
+      <div className="flex-1 flex flex-col items-center justify-center">
+        <div className="w-full max-w-xs aspect-square rounded-xl overflow-hidden mb-6 shadow-lg">
+          <img src={selectedSermon.image} alt={selectedSermon.title} className="w-full h-full object-cover" />
+        </div>
+        <div className="text-center mb-6 w-full">
+          <h2 className="font-bold text-xl mb-1 line-clamp-2">{selectedSermon.title}</h2>
+          <p className="text-muted-foreground">{selectedSermon.preacher}</p>
+          <p className="text-sm text-muted-foreground">{selectedSermon.church}</p>
+        </div>
+        
+        <div className="w-full max-w-sm space-y-4">
+          <div className="space-y-2">
+            <Slider
+              value={[progress]}
+              max={100}
+              step={0.1}
+              onValueChange={(value) => setCurrentTime(Math.floor((value[0] / 100) * selectedSermon.durationSeconds))}
+            />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>{formatTime(currentTime)}</span>
+              <span>{selectedSermon.duration}</span>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => setIsShuffled(!isShuffled)}
+            >
+              <Shuffle className={`h-5 w-5 ${isShuffled ? 'text-primary' : ''}`} />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => setCurrentTime(Math.max(0, currentTime - 15))}
+            >
+              <SkipBack className="h-6 w-6" />
+            </Button>
+            <Button 
+              size="icon" 
+              className="h-14 w-14 rounded-full"
+              onClick={() => setIsPlaying(!isPlaying)}
+            >
+              {isPlaying ? (
+                <Pause className="h-7 w-7" />
+              ) : (
+                <Play className="h-7 w-7 ml-1" />
+              )}
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => setCurrentTime(Math.min(selectedSermon.durationSeconds, currentTime + 15))}
+            >
+              <SkipForward className="h-6 w-6" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => {
+                if (repeatMode === "off") setRepeatMode("all");
+                else if (repeatMode === "all") setRepeatMode("one");
+                else setRepeatMode("off");
+              }}
+            >
+              {repeatMode === "one" ? (
+                <Repeat1 className="h-5 w-5 text-primary" />
+              ) : (
+                <Repeat className={`h-5 w-5 ${repeatMode === "all" ? 'text-primary' : ''}`} />
+              )}
+            </Button>
+          </div>
+
+          <div className="flex items-center justify-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => setIsMuted(!isMuted)}
+            >
+              {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+            </Button>
+            <Slider
+              value={isMuted ? [0] : volume}
+              max={100}
+              className="w-32"
+              onValueChange={setVolume}
+            />
+          </div>
+
+          <div className="flex items-center justify-center gap-2 flex-wrap">
+            <Select value={playbackSpeed} onValueChange={setPlaybackSpeed}>
+              <SelectTrigger className="w-20">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0.5">0.5x</SelectItem>
+                <SelectItem value="0.75">0.75x</SelectItem>
+                <SelectItem value="1">1x</SelectItem>
+                <SelectItem value="1.25">1.25x</SelectItem>
+                <SelectItem value="1.5">1.5x</SelectItem>
+                <SelectItem value="1.75">1.75x</SelectItem>
+                <SelectItem value="2">2x</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button variant="ghost" size="icon">
+              {selectedSermon.bookmarked ? (
+                <BookmarkCheck className="h-5 w-5 text-primary" />
+              ) : (
+                <Bookmark className="h-5 w-5" />
+              )}
+            </Button>
+            <Button variant="ghost" size="icon">
+              <Heart className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" size="icon">
+              <Share2 className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" size="icon">
+              <Download className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-center gap-2 pt-4 border-t flex-wrap">
+        <Button variant="outline" size="sm" onClick={() => setShowTranscript(!showTranscript)}>
+          <FileText className="h-4 w-4 mr-1" />
+          Transcript
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => setShowNotes(!showNotes)}>
+          <Quote className="h-4 w-4 mr-1" />
+          Notes
+        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm">
+              <Timer className="h-4 w-4 mr-1" />
+              Sleep
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => setSleepTimer(null)}>Off</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setSleepTimer(15)}>15 min</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setSleepTimer(30)}>30 min</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setSleepTimer(60)}>1 hour</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm">
+              <Settings2 className="h-4 w-4 mr-1" />
+              Quality
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => setAudioQuality("low")}>Low (64 kbps)</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setAudioQuality("medium")}>Medium (128 kbps)</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setAudioQuality("high")}>High (320 kbps)</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
+  );
+
   return (
     <Layout>
-      <div className="flex flex-col h-[calc(100vh-8rem)]">
+      <div className="flex flex-col h-[calc(100vh-8rem)] md:h-[calc(100vh-8rem)]">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-          <div className="flex items-center justify-between gap-4 mb-4 flex-shrink-0 flex-wrap">
-            <TabsList>
-              <TabsTrigger value="library" data-testid="tab-library">
-                <Radio className="h-4 w-4 mr-2" />
-                Library
-              </TabsTrigger>
-              <TabsTrigger value="series" data-testid="tab-series">
-                <Layers className="h-4 w-4 mr-2" />
-                Series
-              </TabsTrigger>
-              <TabsTrigger value="preachers" data-testid="tab-preachers">
-                <Mic className="h-4 w-4 mr-2" />
-                Preachers
-              </TabsTrigger>
-              <TabsTrigger value="churches" data-testid="tab-churches">
-                <Church className="h-4 w-4 mr-2" />
-                Churches
-              </TabsTrigger>
-              <TabsTrigger value="playlists" data-testid="tab-playlists">
-                <ListMusic className="h-4 w-4 mr-2" />
-                Playlists
-              </TabsTrigger>
-              <TabsTrigger value="history" data-testid="tab-history">
-                <History className="h-4 w-4 mr-2" />
-                History
-              </TabsTrigger>
-            </TabsList>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 flex-shrink-0">
+            <ScrollArea className="w-full sm:w-auto">
+              <TabsList className="inline-flex w-max">
+                <TabsTrigger value="library" data-testid="tab-library" className="text-xs sm:text-sm">
+                  <Radio className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  <span className="hidden xs:inline">Library</span>
+                  <span className="xs:hidden">Lib</span>
+                </TabsTrigger>
+                <TabsTrigger value="series" data-testid="tab-series" className="text-xs sm:text-sm">
+                  <Layers className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  Series
+                </TabsTrigger>
+                <TabsTrigger value="preachers" data-testid="tab-preachers" className="text-xs sm:text-sm">
+                  <Mic className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Preachers</span>
+                  <span className="sm:hidden">Pastors</span>
+                </TabsTrigger>
+                <TabsTrigger value="churches" data-testid="tab-churches" className="text-xs sm:text-sm">
+                  <Church className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Churches</span>
+                  <span className="sm:hidden">Church</span>
+                </TabsTrigger>
+                <TabsTrigger value="playlists" data-testid="tab-playlists" className="text-xs sm:text-sm">
+                  <ListMusic className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Playlists</span>
+                  <span className="sm:hidden">Lists</span>
+                </TabsTrigger>
+                <TabsTrigger value="history" data-testid="tab-history" className="text-xs sm:text-sm">
+                  <History className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">History</span>
+                  <span className="sm:hidden">Recent</span>
+                </TabsTrigger>
+              </TabsList>
+            </ScrollArea>
 
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="relative">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <div className="relative flex-1 sm:flex-initial">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search sermons, speakers, topics..."
-                  className="pl-9 w-64"
+                  placeholder="Search..."
+                  className="pl-9 w-full sm:w-48 md:w-64"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   data-testid="input-search"
@@ -358,17 +588,35 @@ export default function AudioPage() {
               >
                 <Filter className="h-4 w-4" />
               </Button>
+              <Sheet open={showQueueSheet} onOpenChange={setShowQueueSheet}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="icon" className="lg:hidden" data-testid="button-queue-mobile">
+                    <ListMusic className="h-4 w-4" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-80">
+                  <SheetHeader>
+                    <SheetTitle className="flex items-center gap-2">
+                      <ListMusic className="h-5 w-5" />
+                      Queue
+                    </SheetTitle>
+                  </SheetHeader>
+                  <div className="mt-4 h-[calc(100%-4rem)]">
+                    <QueueContent />
+                  </div>
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
 
           {showFilters && (
             <Card className="mb-4 flex-shrink-0">
-              <CardContent className="p-4">
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              <CardContent className="p-3 sm:p-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Speaker</label>
+                    <label className="text-xs sm:text-sm font-medium mb-1.5 sm:mb-2 block">Speaker</label>
                     <Select>
-                      <SelectTrigger data-testid="select-speaker">
+                      <SelectTrigger data-testid="select-speaker" className="text-sm">
                         <SelectValue placeholder="Any speaker" />
                       </SelectTrigger>
                       <SelectContent>
@@ -379,9 +627,9 @@ export default function AudioPage() {
                     </Select>
                   </div>
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Church</label>
+                    <label className="text-xs sm:text-sm font-medium mb-1.5 sm:mb-2 block">Church</label>
                     <Select>
-                      <SelectTrigger data-testid="select-church">
+                      <SelectTrigger data-testid="select-church" className="text-sm">
                         <SelectValue placeholder="Any church" />
                       </SelectTrigger>
                       <SelectContent>
@@ -392,13 +640,13 @@ export default function AudioPage() {
                     </Select>
                   </div>
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Bible Passage</label>
-                    <Input placeholder="e.g., John 3:16" data-testid="input-passage" />
+                    <label className="text-xs sm:text-sm font-medium mb-1.5 sm:mb-2 block">Bible Passage</label>
+                    <Input placeholder="e.g., John 3:16" data-testid="input-passage" className="text-sm" />
                   </div>
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Topic</label>
+                    <label className="text-xs sm:text-sm font-medium mb-1.5 sm:mb-2 block">Topic</label>
                     <Select>
-                      <SelectTrigger data-testid="select-topic">
+                      <SelectTrigger data-testid="select-topic" className="text-sm">
                         <SelectValue placeholder="Any topic" />
                       </SelectTrigger>
                       <SelectContent>
@@ -411,9 +659,9 @@ export default function AudioPage() {
                     </Select>
                   </div>
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Series</label>
+                    <label className="text-xs sm:text-sm font-medium mb-1.5 sm:mb-2 block">Series</label>
                     <Select>
-                      <SelectTrigger data-testid="select-series">
+                      <SelectTrigger data-testid="select-series" className="text-sm">
                         <SelectValue placeholder="Any series" />
                       </SelectTrigger>
                       <SelectContent>
@@ -424,9 +672,9 @@ export default function AudioPage() {
                     </Select>
                   </div>
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Date</label>
+                    <label className="text-xs sm:text-sm font-medium mb-1.5 sm:mb-2 block">Date</label>
                     <Select>
-                      <SelectTrigger data-testid="select-date">
+                      <SelectTrigger data-testid="select-date" className="text-sm">
                         <SelectValue placeholder="Any time" />
                       </SelectTrigger>
                       <SelectContent>
@@ -445,29 +693,32 @@ export default function AudioPage() {
           <div className="flex-1 min-h-0 flex gap-6">
             <div className="flex-1 flex flex-col min-h-0">
               <TabsContent value="library" className="flex-1 m-0 overflow-hidden flex flex-col">
-                <div className="flex gap-2 mb-4 overflow-x-auto pb-2 flex-shrink-0 flex-wrap">
-                  {sermonCategories.map(cat => (
-                    <Button
-                      key={cat.id}
-                      variant={activeCategory === cat.id ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setActiveCategory(cat.id)}
-                      className="flex-shrink-0"
-                      data-testid={`button-category-${cat.id}`}
-                    >
-                      {cat.name}
-                      <Badge variant="secondary" className="ml-2">{cat.count}</Badge>
-                    </Button>
-                  ))}
-                </div>
+                <ScrollArea className="w-full mb-3 sm:mb-4 flex-shrink-0">
+                  <div className="flex gap-2 pb-2">
+                    {sermonCategories.map(cat => (
+                      <Button
+                        key={cat.id}
+                        variant={activeCategory === cat.id ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setActiveCategory(cat.id)}
+                        className="flex-shrink-0 text-xs sm:text-sm"
+                        data-testid={`button-category-${cat.id}`}
+                      >
+                        <span className="hidden sm:inline">{cat.name}</span>
+                        <span className="sm:hidden">{cat.id === "all" ? "All" : cat.name.slice(0, 4)}</span>
+                        <Badge variant="secondary" className="ml-1 sm:ml-2 text-xs">{cat.count}</Badge>
+                      </Button>
+                    ))}
+                  </div>
+                </ScrollArea>
 
                 <ScrollArea className="flex-1">
-                  <div className="space-y-3 pr-4">
+                  <div className="space-y-2 sm:space-y-3 pr-2 sm:pr-4">
                     {filteredSermons.length === 0 ? (
-                      <div className="text-center py-12 text-muted-foreground">
-                        <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                        <p className="text-lg font-medium">No sermons found</p>
-                        <p className="text-sm">Try adjusting your search or filter criteria</p>
+                      <div className="text-center py-8 sm:py-12 text-muted-foreground">
+                        <Search className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 opacity-50" />
+                        <p className="text-base sm:text-lg font-medium">No sermons found</p>
+                        <p className="text-xs sm:text-sm">Try adjusting your search or filter criteria</p>
                       </div>
                     ) : filteredSermons.map(sermon => (
                       <Card 
@@ -476,21 +727,21 @@ export default function AudioPage() {
                         onClick={() => setSelectedSermon(sermon)}
                         data-testid={`card-sermon-${sermon.id}`}
                       >
-                        <CardContent className="p-4">
-                          <div className="flex gap-4">
-                            <div className="relative w-32 h-20 rounded-lg overflow-hidden flex-shrink-0 group">
+                        <CardContent className="p-3 sm:p-4">
+                          <div className="flex gap-3 sm:gap-4">
+                            <div className="relative w-20 h-14 sm:w-32 sm:h-20 rounded-lg overflow-hidden flex-shrink-0 group">
                               <img src={sermon.image} alt={sermon.title} className="w-full h-full object-cover" />
                               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                <PlayCircle className="h-10 w-10 text-white" />
+                                <PlayCircle className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
                               </div>
-                              <Badge className="absolute bottom-1 right-1 text-xs">{sermon.duration}</Badge>
+                              <Badge className="absolute bottom-1 right-1 text-[10px] sm:text-xs px-1 sm:px-2">{sermon.duration}</Badge>
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-start justify-between gap-2">
-                                <div className="min-w-0">
-                                  <h3 className="font-semibold text-foreground truncate">{sermon.title}</h3>
-                                  <p className="text-sm text-muted-foreground">{sermon.preacher} • {sermon.church}</p>
-                                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                <div className="min-w-0 flex-1">
+                                  <h3 className="font-semibold text-foreground text-sm sm:text-base line-clamp-1 sm:line-clamp-none">{sermon.title}</h3>
+                                  <p className="text-xs sm:text-sm text-muted-foreground line-clamp-1">{sermon.preacher}</p>
+                                  <div className="hidden sm:flex items-center gap-2 mt-1 flex-wrap">
                                     <Badge variant="outline" className="text-xs">
                                       <BookOpen className="h-3 w-3 mr-1" />
                                       {sermon.passage}
@@ -506,24 +757,28 @@ export default function AudioPage() {
                                       </Badge>
                                     )}
                                   </div>
+                                  <div className="sm:hidden flex items-center gap-1 mt-1">
+                                    <Badge variant="outline" className="text-[10px] px-1">{sermon.passage}</Badge>
+                                    <Badge variant="secondary" className="text-[10px] px-1">{sermon.topic}</Badge>
+                                  </div>
                                 </div>
-                                <div className="flex items-center gap-1 flex-shrink-0">
+                                <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-8 w-8"
+                                    className="h-7 w-7 sm:h-8 sm:w-8"
                                     data-testid={`button-bookmark-${sermon.id}`}
                                   >
                                     {sermon.bookmarked ? (
-                                      <BookmarkCheck className="h-4 w-4 text-primary" />
+                                      <BookmarkCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
                                     ) : (
-                                      <Bookmark className="h-4 w-4" />
+                                      <Bookmark className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                     )}
                                   </Button>
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-8 w-8"
+                                    className="h-7 w-7 sm:h-8 sm:w-8 hidden sm:flex"
                                     data-testid={`button-download-${sermon.id}`}
                                   >
                                     {sermon.downloaded ? (
@@ -534,8 +789,8 @@ export default function AudioPage() {
                                   </Button>
                                   <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-8 w-8" data-testid={`button-more-${sermon.id}`}>
-                                        <MoreVertical className="h-4 w-4" />
+                                      <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8" data-testid={`button-more-${sermon.id}`}>
+                                        <MoreVertical className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                       </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
@@ -546,6 +801,10 @@ export default function AudioPage() {
                                       <DropdownMenuItem>
                                         <Plus className="h-4 w-4 mr-2" />
                                         Add to Playlist
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem className="sm:hidden">
+                                        <Download className="h-4 w-4 mr-2" />
+                                        Download
                                       </DropdownMenuItem>
                                       <DropdownMenuItem>
                                         <Share2 className="h-4 w-4 mr-2" />
@@ -564,7 +823,7 @@ export default function AudioPage() {
                                   </DropdownMenu>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                              <div className="hidden sm:flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                                 <span className="flex items-center gap-1">
                                   <Calendar className="h-3 w-3" />
                                   {new Date(sermon.date).toLocaleDateString()}
@@ -581,6 +840,13 @@ export default function AudioPage() {
                                   <Badge variant="outline" className="text-xs">Transcript</Badge>
                                 )}
                               </div>
+                              <div className="sm:hidden flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">
+                                <span>{new Date(sermon.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                                <span className="flex items-center gap-0.5">
+                                  <Star className="h-2.5 w-2.5 fill-yellow-500 text-yellow-500" />
+                                  {sermon.rating}
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </CardContent>
@@ -592,27 +858,27 @@ export default function AudioPage() {
 
               <TabsContent value="series" className="flex-1 m-0 overflow-hidden">
                 <ScrollArea className="h-full">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pr-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pr-2 sm:pr-4">
                     {sermonSeries.map(series => (
                       <Card key={series.id} className="cursor-pointer hover-elevate" data-testid={`card-series-${series.id}`}>
-                        <CardContent className="p-4">
-                          <div className="flex gap-4">
-                            <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
+                        <CardContent className="p-3 sm:p-4">
+                          <div className="flex gap-3 sm:gap-4">
+                            <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-lg overflow-hidden flex-shrink-0">
                               <img src={series.image} alt={series.name} className="w-full h-full object-cover" />
                             </div>
-                            <div className="flex-1">
-                              <h3 className="font-semibold text-lg">{series.name}</h3>
-                              <p className="text-sm text-muted-foreground mb-2">{series.sermonCount} sermons</p>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-sm sm:text-lg line-clamp-1">{series.name}</h3>
+                              <p className="text-xs sm:text-sm text-muted-foreground mb-2">{series.sermonCount} sermons</p>
                               <div className="space-y-1">
-                                <div className="flex justify-between text-xs">
+                                <div className="flex justify-between text-[10px] sm:text-xs">
                                   <span>Progress</span>
                                   <span>{series.progress}/{series.sermonCount}</span>
                                 </div>
-                                <Progress value={(series.progress / series.sermonCount) * 100} className="h-2" />
+                                <Progress value={(series.progress / series.sermonCount) * 100} className="h-1.5 sm:h-2" />
                               </div>
                               {series.progress > 0 && series.progress < series.sermonCount && (
-                                <Button size="sm" className="mt-2" data-testid={`button-continue-series-${series.id}`}>
-                                  Continue Series
+                                <Button size="sm" className="mt-2 text-xs h-7 sm:h-8" data-testid={`button-continue-series-${series.id}`}>
+                                  Continue
                                 </Button>
                               )}
                             </div>
@@ -626,34 +892,35 @@ export default function AudioPage() {
 
               <TabsContent value="preachers" className="flex-1 m-0 overflow-hidden">
                 <ScrollArea className="h-full">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pr-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pr-2 sm:pr-4">
                     {preachers.map(preacher => (
                       <Card key={preacher.id} className="cursor-pointer" data-testid={`card-preacher-${preacher.id}`}>
-                        <CardContent className="p-4">
-                          <div className="flex items-center gap-4">
-                            <Avatar className="h-16 w-16">
+                        <CardContent className="p-3 sm:p-4">
+                          <div className="flex items-center gap-3 sm:gap-4">
+                            <Avatar className="h-12 w-12 sm:h-16 sm:w-16">
                               <AvatarImage src={preacher.avatar} />
                               <AvatarFallback>{preacher.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                             </Avatar>
-                            <div className="flex-1">
-                              <h3 className="font-semibold">{preacher.name}</h3>
-                              <p className="text-sm text-muted-foreground">{preacher.church}</p>
-                              <p className="text-xs text-muted-foreground">{preacher.sermons} sermons</p>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-sm sm:text-base line-clamp-1">{preacher.name}</h3>
+                              <p className="text-xs sm:text-sm text-muted-foreground line-clamp-1">{preacher.church}</p>
+                              <p className="text-[10px] sm:text-xs text-muted-foreground">{preacher.sermons} sermons</p>
                             </div>
                             <Button
                               variant={preacher.subscribed ? "secondary" : "default"}
                               size="sm"
+                              className="text-xs h-7 sm:h-8 px-2 sm:px-3"
                               data-testid={`button-subscribe-${preacher.id}`}
                             >
                               {preacher.subscribed ? (
                                 <>
-                                  <BellOff className="h-4 w-4 mr-1" />
-                                  Subscribed
+                                  <BellOff className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+                                  <span className="hidden sm:inline">Subscribed</span>
                                 </>
                               ) : (
                                 <>
-                                  <Bell className="h-4 w-4 mr-1" />
-                                  Subscribe
+                                  <Bell className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+                                  <span className="hidden sm:inline">Subscribe</span>
                                 </>
                               )}
                             </Button>
@@ -667,22 +934,22 @@ export default function AudioPage() {
 
               <TabsContent value="churches" className="flex-1 m-0 overflow-hidden">
                 <ScrollArea className="h-full">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pr-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pr-2 sm:pr-4">
                     {churches.map(church => (
                       <Card key={church.id} className="cursor-pointer" data-testid={`card-church-${church.id}`}>
-                        <CardContent className="p-4">
-                          <div className="flex items-center gap-4">
-                            <Avatar className="h-16 w-16">
-                              <AvatarFallback className="bg-primary text-primary-foreground text-lg">{church.avatar}</AvatarFallback>
+                        <CardContent className="p-3 sm:p-4">
+                          <div className="flex items-center gap-3 sm:gap-4">
+                            <Avatar className="h-12 w-12 sm:h-16 sm:w-16">
+                              <AvatarFallback className="bg-primary text-primary-foreground text-sm sm:text-lg">{church.avatar}</AvatarFallback>
                             </Avatar>
-                            <div className="flex-1">
-                              <h3 className="font-semibold">{church.name}</h3>
-                              <p className="text-sm text-muted-foreground">{church.location}</p>
-                              <p className="text-xs text-muted-foreground">{church.sermons} sermons</p>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-sm sm:text-base line-clamp-1">{church.name}</h3>
+                              <p className="text-xs sm:text-sm text-muted-foreground">{church.location}</p>
+                              <p className="text-[10px] sm:text-xs text-muted-foreground">{church.sermons} sermons</p>
                             </div>
-                            <Button variant="outline" size="sm" data-testid={`button-view-church-${church.id}`}>
-                              View Sermons
-                              <ChevronRight className="h-4 w-4 ml-1" />
+                            <Button variant="outline" size="sm" className="text-xs h-7 sm:h-8 px-2 sm:px-3" data-testid={`button-view-church-${church.id}`}>
+                              <span className="hidden sm:inline">View Sermons</span>
+                              <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 sm:ml-1" />
                             </Button>
                           </div>
                         </CardContent>
@@ -693,28 +960,29 @@ export default function AudioPage() {
               </TabsContent>
 
               <TabsContent value="playlists" className="flex-1 m-0 overflow-hidden">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold">Your Playlists</h2>
-                  <Button data-testid="button-create-playlist">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Playlist
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <h2 className="text-base sm:text-lg font-semibold">Your Playlists</h2>
+                  <Button size="sm" className="text-xs h-7 sm:h-8" data-testid="button-create-playlist">
+                    <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                    <span className="hidden sm:inline">Create Playlist</span>
+                    <span className="sm:hidden">New</span>
                   </Button>
                 </div>
                 <ScrollArea className="h-[calc(100%-3rem)]">
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pr-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 pr-2 sm:pr-4">
                     {mockPlaylists.map(playlist => (
                       <Card key={playlist.id} className="cursor-pointer group" data-testid={`card-playlist-${playlist.id}`}>
-                        <CardContent className="p-3">
-                          <div className="relative aspect-square rounded-lg overflow-hidden mb-3">
+                        <CardContent className="p-2 sm:p-3">
+                          <div className="relative aspect-square rounded-lg overflow-hidden mb-2 sm:mb-3">
                             <img src={playlist.image} alt={playlist.name} className="w-full h-full object-cover" />
                             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              <Button size="icon" className="h-12 w-12 rounded-full">
-                                <Play className="h-6 w-6" />
+                              <Button size="icon" className="h-10 w-10 sm:h-12 sm:w-12 rounded-full">
+                                <Play className="h-5 w-5 sm:h-6 sm:w-6" />
                               </Button>
                             </div>
                           </div>
-                          <h3 className="font-medium truncate">{playlist.name}</h3>
-                          <p className="text-sm text-muted-foreground">{playlist.sermonCount} sermons</p>
+                          <h3 className="font-medium text-xs sm:text-sm truncate">{playlist.name}</h3>
+                          <p className="text-[10px] sm:text-sm text-muted-foreground">{playlist.sermonCount} sermons</p>
                         </CardContent>
                       </Card>
                     ))}
@@ -724,31 +992,31 @@ export default function AudioPage() {
 
               <TabsContent value="history" className="flex-1 m-0 overflow-hidden">
                 <ScrollArea className="h-full">
-                  <div className="space-y-4 pr-4">
+                  <div className="space-y-4 pr-2 sm:pr-4">
                     <div>
-                      <h3 className="font-semibold mb-3 flex items-center gap-2">
+                      <h3 className="font-semibold text-sm sm:text-base mb-2 sm:mb-3 flex items-center gap-2">
                         <History className="h-4 w-4" />
                         Continue Where You Left Off
                       </h3>
                       <div className="space-y-2">
                         {recentlyPlayed.filter(s => s.progress < 100).map(sermon => (
                           <Card key={sermon.id} className="cursor-pointer" data-testid={`card-continue-${sermon.id}`}>
-                            <CardContent className="p-3">
-                              <div className="flex items-center gap-3">
-                                <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                            <CardContent className="p-2 sm:p-3">
+                              <div className="flex items-center gap-2 sm:gap-3">
+                                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden flex-shrink-0">
                                   <img src={sermon.image} alt={sermon.title} className="w-full h-full object-cover" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <h4 className="font-medium truncate">{sermon.title}</h4>
-                                  <p className="text-sm text-muted-foreground">{sermon.preacher}</p>
+                                  <h4 className="font-medium text-xs sm:text-sm truncate">{sermon.title}</h4>
+                                  <p className="text-[10px] sm:text-sm text-muted-foreground truncate">{sermon.preacher}</p>
                                   <div className="flex items-center gap-2 mt-1">
                                     <Progress value={sermon.progress} className="flex-1 h-1" />
-                                    <span className="text-xs text-muted-foreground">{sermon.progress}%</span>
+                                    <span className="text-[10px] sm:text-xs text-muted-foreground">{sermon.progress}%</span>
                                   </div>
                                 </div>
-                                <Button size="sm" data-testid={`button-resume-${sermon.id}`}>
-                                  <Play className="h-4 w-4 mr-1" />
-                                  Resume
+                                <Button size="sm" className="text-xs h-7 sm:h-8 px-2 sm:px-3" data-testid={`button-resume-${sermon.id}`}>
+                                  <Play className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+                                  <span className="hidden sm:inline">Resume</span>
                                 </Button>
                               </div>
                             </CardContent>
@@ -758,23 +1026,23 @@ export default function AudioPage() {
                     </div>
                     <Separator />
                     <div>
-                      <h3 className="font-semibold mb-3">Recently Played</h3>
+                      <h3 className="font-semibold text-sm sm:text-base mb-2 sm:mb-3">Recently Played</h3>
                       <div className="space-y-2">
                         {recentlyPlayed.map(sermon => (
                           <Card key={sermon.id} className="cursor-pointer" data-testid={`card-recent-${sermon.id}`}>
-                            <CardContent className="p-3">
-                              <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 rounded overflow-hidden flex-shrink-0">
+                            <CardContent className="p-2 sm:p-3">
+                              <div className="flex items-center gap-2 sm:gap-3">
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded overflow-hidden flex-shrink-0">
                                   <img src={sermon.image} alt={sermon.title} className="w-full h-full object-cover" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <h4 className="font-medium truncate text-sm">{sermon.title}</h4>
-                                  <p className="text-xs text-muted-foreground">{sermon.preacher} • {sermon.lastPlayed}</p>
+                                  <h4 className="font-medium text-xs sm:text-sm truncate">{sermon.title}</h4>
+                                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{sermon.preacher} • {sermon.lastPlayed}</p>
                                 </div>
                                 {sermon.progress === 100 && (
-                                  <Badge variant="secondary" className="text-xs">
-                                    <CheckCircle2 className="h-3 w-3 mr-1" />
-                                    Completed
+                                  <Badge variant="secondary" className="text-[10px] sm:text-xs">
+                                    <CheckCircle2 className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
+                                    <span className="hidden sm:inline">Completed</span>
                                   </Badge>
                                 )}
                               </div>
@@ -793,85 +1061,41 @@ export default function AudioPage() {
                 <ListMusic className="h-5 w-5" />
                 Queue
               </h3>
-              <ScrollArea className="flex-1 mb-4">
-                <div className="space-y-2 pr-2">
-                  {mockQueue.map((sermon, i) => (
-                    <div 
-                      key={sermon.id} 
-                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer group"
-                      data-testid={`queue-item-${sermon.id}`}
-                    >
-                      <span className="text-sm text-muted-foreground w-4">{i + 1}</span>
-                      <div className="h-10 w-10 rounded overflow-hidden flex-shrink-0">
-                        <img src={sermon.image} alt={sermon.title} className="h-full w-full object-cover" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{sermon.title}</p>
-                        <p className="text-xs text-muted-foreground truncate">{sermon.preacher}</p>
-                      </div>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 opacity-0 group-hover:opacity-100"
-                        data-testid={`button-remove-queue-${sermon.id}`}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-
-              <Separator className="my-4" />
-
-              <h3 className="font-bold text-sm mb-3">Recommendations</h3>
-              <ScrollArea className="flex-1">
-                <div className="space-y-2 pr-2">
-                  {mockSermons.slice(3, 6).map(sermon => (
-                    <div 
-                      key={sermon.id}
-                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer"
-                      data-testid={`recommendation-${sermon.id}`}
-                    >
-                      <div className="h-10 w-10 rounded overflow-hidden flex-shrink-0">
-                        <img src={sermon.image} alt={sermon.title} className="h-full w-full object-cover" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{sermon.title}</p>
-                        <p className="text-xs text-muted-foreground truncate">{sermon.preacher}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
+              <QueueContent />
             </div>
           </div>
         </Tabs>
 
-        <div className={`mt-4 border-t border-border pt-4 flex-shrink-0 transition-all ${playerExpanded ? 'pb-4' : ''}`}>
-          <div className="flex items-center gap-4">
+        <div className="mt-3 sm:mt-4 border-t border-border pt-3 sm:pt-4 flex-shrink-0">
+          <div className="hidden md:flex items-center gap-4">
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div 
-                className="h-14 w-14 rounded-lg overflow-hidden flex-shrink-0 cursor-pointer"
-                onClick={() => setPlayerExpanded(!playerExpanded)}
-                data-testid="button-expand-player"
-              >
-                <img src={selectedSermon.image} alt={selectedSermon.title} className="h-full w-full object-cover" />
-              </div>
+              <Sheet open={showPlayerSheet} onOpenChange={setShowPlayerSheet}>
+                <SheetTrigger asChild>
+                  <div 
+                    className="h-12 sm:h-14 w-12 sm:w-14 rounded-lg overflow-hidden flex-shrink-0 cursor-pointer"
+                    data-testid="button-expand-player"
+                  >
+                    <img src={selectedSermon.image} alt={selectedSermon.title} className="h-full w-full object-cover" />
+                  </div>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="h-[90vh]">
+                  <FullPlayerContent />
+                </SheetContent>
+              </Sheet>
               <div className="min-w-0 flex-1">
-                <h4 className="font-semibold truncate">{selectedSermon.title}</h4>
-                <p className="text-sm text-muted-foreground truncate">{selectedSermon.preacher} • {selectedSermon.church}</p>
+                <h4 className="font-semibold text-sm sm:text-base truncate">{selectedSermon.title}</h4>
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">{selectedSermon.preacher}</p>
               </div>
               <div className="flex items-center gap-1 flex-shrink-0">
-                <Button variant="ghost" size="icon" data-testid="button-player-bookmark">
+                <Button variant="ghost" size="icon" className="h-8 w-8" data-testid="button-player-bookmark">
                   {selectedSermon.bookmarked ? (
-                    <BookmarkCheck className="h-5 w-5 text-primary" />
+                    <BookmarkCheck className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                   ) : (
-                    <Bookmark className="h-5 w-5" />
+                    <Bookmark className="h-4 w-4 sm:h-5 sm:w-5" />
                   )}
                 </Button>
-                <Button variant="ghost" size="icon" data-testid="button-player-heart">
-                  <Heart className="h-5 w-5" />
+                <Button variant="ghost" size="icon" className="h-8 w-8" data-testid="button-player-heart">
+                  <Heart className="h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
               </div>
             </div>
@@ -949,7 +1173,7 @@ export default function AudioPage() {
 
             <div className="flex items-center gap-2 flex-1 justify-end">
               <Select value={playbackSpeed} onValueChange={setPlaybackSpeed}>
-                <SelectTrigger className="w-20" data-testid="select-playback-speed">
+                <SelectTrigger className="w-16 sm:w-20" data-testid="select-playback-speed">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -963,7 +1187,7 @@ export default function AudioPage() {
                 </SelectContent>
               </Select>
 
-              <div className="flex items-center gap-1">
+              <div className="hidden xl:flex items-center gap-1">
                 <Button 
                   variant="ghost" 
                   size="icon" 
@@ -984,241 +1208,84 @@ export default function AudioPage() {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" data-testid="button-sleep-timer">
-                    <Timer className="h-4 w-4" />
+                  <Button variant="ghost" size="icon" className="h-8 w-8" data-testid="button-player-more">
+                    <MoreVertical className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setSleepTimer(null)}>
-                    Off
-                    {sleepTimer === null && <CheckCircle2 className="h-4 w-4 ml-auto" />}
+                  <DropdownMenuItem onClick={() => setShowTranscript(!showTranscript)}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Transcript
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSleepTimer(15)}>
-                    15 minutes
-                    {sleepTimer === 15 && <CheckCircle2 className="h-4 w-4 ml-auto" />}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSleepTimer(30)}>
-                    30 minutes
-                    {sleepTimer === 30 && <CheckCircle2 className="h-4 w-4 ml-auto" />}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSleepTimer(45)}>
-                    45 minutes
-                    {sleepTimer === 45 && <CheckCircle2 className="h-4 w-4 ml-auto" />}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSleepTimer(60)}>
-                    1 hour
-                    {sleepTimer === 60 && <CheckCircle2 className="h-4 w-4 ml-auto" />}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" data-testid="button-audio-quality">
-                    <Settings2 className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setAudioQuality("low")}>
-                    Low Quality (64 kbps)
-                    {audioQuality === "low" && <CheckCircle2 className="h-4 w-4 ml-auto" />}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setAudioQuality("medium")}>
-                    Medium Quality (128 kbps)
-                    {audioQuality === "medium" && <CheckCircle2 className="h-4 w-4 ml-auto" />}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setAudioQuality("high")}>
-                    High Quality (320 kbps)
-                    {audioQuality === "high" && <CheckCircle2 className="h-4 w-4 ml-auto" />}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={() => setShowTranscript(!showTranscript)}
-                data-testid="button-transcript"
-              >
-                <FileText className={`h-4 w-4 ${showTranscript ? 'text-primary' : ''}`} />
-              </Button>
-
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={() => setShowNotes(!showNotes)}
-                data-testid="button-notes"
-              >
-                <Quote className={`h-4 w-4 ${showNotes ? 'text-primary' : ''}`} />
-              </Button>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" data-testid="button-share">
-                    <Share2 className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem>
-                    <Copy className="h-4 w-4 mr-2" />
-                    Copy Link
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Share at Current Time
+                  <DropdownMenuItem onClick={() => setShowNotes(!showNotes)}>
+                    <Quote className="h-4 w-4 mr-2" />
+                    Notes
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem>
-                    Share to Facebook
+                    <Timer className="h-4 w-4 mr-2" />
+                    Sleep Timer
                   </DropdownMenuItem>
                   <DropdownMenuItem>
-                    Share to Twitter
+                    <Settings2 className="h-4 w-4 mr-2" />
+                    Audio Quality
                   </DropdownMenuItem>
                   <DropdownMenuItem>
-                    Share via Email
+                    <Share2 className="h-4 w-4 mr-2" />
+                    Share
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={() => setPlayerExpanded(!playerExpanded)}
-                data-testid="button-toggle-expand"
-              >
-                {playerExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
-              </Button>
             </div>
           </div>
 
-          {playerExpanded && (
-            <div className="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
-              {showTranscript && (
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      Transcript
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ScrollArea className="h-48">
-                      <div className="space-y-2 text-sm">
-                        <p className="text-muted-foreground"><span className="text-primary font-medium">[00:00]</span> Welcome everyone to today's message. We're continuing our series on faith...</p>
-                        <p><span className="text-primary font-medium">[00:45]</span> Turn with me to Hebrews chapter 11. This is often called the "Hall of Faith" chapter...</p>
-                        <p><span className="text-primary font-medium">[02:30]</span> Now faith is the substance of things hoped for, the evidence of things not seen...</p>
-                        <p className="bg-primary/10 p-2 rounded"><span className="text-primary font-medium">[14:52]</span> What does it mean to walk by faith and not by sight? This is where we are now...</p>
-                        <p><span className="text-primary font-medium">[18:20]</span> Abraham believed God, and it was credited to him as righteousness...</p>
-                      </div>
-                    </ScrollArea>
-                  </CardContent>
-                </Card>
-              )}
-
-              {showNotes && (
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <Quote className="h-4 w-4" />
-                      Notes & Highlights
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <Textarea 
-                        placeholder="Add your notes for this sermon..." 
-                        className="h-20 resize-none"
-                        data-testid="textarea-notes"
-                      />
-                      <div className="flex gap-2 flex-wrap">
-                        <Button variant="outline" size="sm" data-testid="button-add-highlight">
-                          <Highlighter className="h-3 w-3 mr-1" />
-                          Add Highlight
-                        </Button>
-                        <Button variant="outline" size="sm" data-testid="button-add-takeaway">
-                          <Star className="h-3 w-3 mr-1" />
-                          Add Takeaway
-                        </Button>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="p-2 bg-yellow-500/10 border-l-2 border-yellow-500 rounded text-sm">
-                          "Faith is not believing that God can, it is knowing that God will."
-                        </div>
-                        <div className="p-2 bg-primary/10 border-l-2 border-primary rounded text-sm">
-                          Key takeaway: Trust in God's timing, not our own.
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              <Card className={showTranscript || showNotes ? '' : 'lg:col-span-3'}>
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <MessageSquare className="h-4 w-4" />
-                      Discussion ({mockComments.length})
-                    </CardTitle>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">Your rating:</span>
-                      <div className="flex gap-0.5">
-                        {[1, 2, 3, 4, 5].map(star => (
-                          <Button
-                            key={star}
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6"
-                            onClick={() => setUserRating(star)}
-                            data-testid={`button-rate-${star}`}
-                          >
-                            <Star className={`h-4 w-4 ${star <= userRating ? 'fill-yellow-500 text-yellow-500' : ''}`} />
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
+          <div className="md:hidden">
+            <Sheet open={showPlayerSheet} onOpenChange={setShowPlayerSheet}>
+              <SheetTrigger asChild>
+                <div className="flex items-center gap-3 p-2 -m-2 cursor-pointer rounded-lg hover:bg-muted/50">
+                  <div className="h-12 w-12 rounded-lg overflow-hidden flex-shrink-0">
+                    <img src={selectedSermon.image} alt={selectedSermon.title} className="h-full w-full object-cover" />
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex gap-2">
-                      <Input 
-                        placeholder="Add a comment..." 
-                        value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
-                        data-testid="input-comment"
-                      />
-                      <Button size="icon" data-testid="button-send-comment">
-                        <Send className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <ScrollArea className="h-32">
-                      <div className="space-y-3">
-                        {mockComments.map(comment => (
-                          <div key={comment.id} className="flex gap-2">
-                            <Avatar className="h-8 w-8">
-                              <AvatarFallback className="text-xs">{comment.avatar}</AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium">{comment.user}</span>
-                                <span className="text-xs text-muted-foreground">{comment.timestamp}</span>
-                              </div>
-                              <p className="text-sm text-muted-foreground">{comment.text}</p>
-                              <Button variant="ghost" size="sm" className="h-6 px-2 mt-1" data-testid={`button-like-comment-${comment.id}`}>
-                                <ThumbsUp className="h-3 w-3 mr-1" />
-                                {comment.likes}
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </ScrollArea>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-sm truncate">{selectedSermon.title}</h4>
+                    <p className="text-xs text-muted-foreground truncate">{selectedSermon.preacher}</p>
+                    <Progress value={progress} className="h-1 mt-1" />
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+                  <div className="flex items-center gap-1">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-9 w-9"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsPlaying(!isPlaying);
+                      }}
+                    >
+                      {isPlaying ? (
+                        <Pause className="h-5 w-5" />
+                      ) : (
+                        <Play className="h-5 w-5" />
+                      )}
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-9 w-9"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentTime(Math.min(selectedSermon.durationSeconds, currentTime + 15));
+                      }}
+                    >
+                      <SkipForward className="h-5 w-5" />
+                    </Button>
+                  </div>
+                </div>
+              </SheetTrigger>
+              <SheetContent side="bottom" className="h-[90vh] rounded-t-xl">
+                <FullPlayerContent />
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </div>
     </Layout>
