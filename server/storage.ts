@@ -179,7 +179,7 @@ export class DbStorage implements IStorage {
 
   async deleteNote(id: string): Promise<boolean> {
     const result = await this.db.delete(notes).where(eq(notes.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Category methods
@@ -207,7 +207,7 @@ export class DbStorage implements IStorage {
 
   async deleteCategory(id: string): Promise<boolean> {
     const result = await this.db.delete(categories).where(eq(categories.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Tag methods
@@ -250,7 +250,7 @@ export class DbStorage implements IStorage {
 
   async deleteTag(id: string): Promise<boolean> {
     const result = await this.db.delete(tags).where(eq(tags.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Folder methods
@@ -278,7 +278,7 @@ export class DbStorage implements IStorage {
 
   async deleteFolder(id: string): Promise<boolean> {
     const result = await this.db.delete(folders).where(eq(folders.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Verse link methods
@@ -297,7 +297,7 @@ export class DbStorage implements IStorage {
 
   async deleteVerseLink(id: string): Promise<boolean> {
     const result = await this.db.delete(verseLinks).where(eq(verseLinks.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Attachment methods
@@ -316,7 +316,7 @@ export class DbStorage implements IStorage {
 
   async deleteAttachment(id: string): Promise<boolean> {
     const result = await this.db.delete(attachments).where(eq(attachments.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Version history methods
@@ -364,7 +364,7 @@ export class DbStorage implements IStorage {
 
   async deleteNoteShare(id: string): Promise<boolean> {
     const result = await this.db.delete(noteShares).where(eq(noteShares.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 }
 

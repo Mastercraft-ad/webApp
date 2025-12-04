@@ -26,6 +26,7 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { cn } from "@/lib/utils";
+import { NotesList } from "@/components/notes/NotesList";
 
 // Mock Data
 const BOOKS = {
@@ -549,55 +550,7 @@ export default function BiblePage() {
 
                       {/* Notes Tab */}
                       <TabsContent value="notes" className="h-full m-0 overflow-hidden flex flex-col">
-                         <div className="p-4 border-b border-border flex justify-between items-center">
-                            <h3 className="font-bold text-sm">My Annotations</h3>
-                            <div className="flex gap-1">
-                               <Button size="sm" variant="ghost" className="h-7 w-7 p-0" title="Export Notes">
-                                  <Download className="h-4 w-4" />
-                               </Button>
-                               <Button size="sm" variant="outline" className="h-7 text-xs gap-1">
-                                  <Layers className="h-3 w-3" /> Filter
-                               </Button>
-                            </div>
-                         </div>
-                         <ScrollArea className="flex-1">
-                            <div className="p-4 space-y-4">
-                               <div className="border border-border rounded-lg p-3 bg-card shadow-sm">
-                                  <div className="flex justify-between items-start mb-2">
-                                     <div className="flex items-center gap-2">
-                                        <Badge variant="outline" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-yellow-200">Gen 1:1</Badge>
-                                        <span className="text-xs text-muted-foreground">Just now</span>
-                                     </div>
-                                     <MoreHorizontal className="h-4 w-4 text-muted-foreground cursor-pointer" />
-                                  </div>
-                                  <p className="text-sm text-foreground/90 mb-2">
-                                     The word "created" (bara) is used only of God's action. It implies creating something new, not just reshaping existing matter.
-                                  </p>
-                                  <div className="flex gap-2">
-                                     <Badge variant="secondary" className="text-[10px] h-5 font-normal">#creation</Badge>
-                                     <Badge variant="secondary" className="text-[10px] h-5 font-normal">#theology</Badge>
-                                  </div>
-                               </div>
-
-                               <div className="border border-border rounded-lg p-3 bg-card shadow-sm">
-                                  <div className="flex justify-between items-start mb-2">
-                                     <div className="flex items-center gap-2">
-                                        <Badge variant="outline" className="bg-blue-100 text-blue-800 hover:bg-blue-100 border-blue-200">Gen 1:26</Badge>
-                                        <span className="text-xs text-muted-foreground">2 days ago</span>
-                                     </div>
-                                     <MoreHorizontal className="h-4 w-4 text-muted-foreground cursor-pointer" />
-                                  </div>
-                                  <p className="text-sm text-foreground/90">
-                                     "Let us" - early hint at the Trinity? Or the royal plural?
-                                  </p>
-                               </div>
-                            </div>
-                         </ScrollArea>
-                         <div className="p-4 border-t border-border bg-card">
-                            <Button className="w-full gap-2">
-                               <FileText className="h-4 w-4" /> Add New Note
-                            </Button>
-                         </div>
+                         <NotesList verseReference="Genesis 1" />
                       </TabsContent>
 
                       {/* Maps Tab */}
