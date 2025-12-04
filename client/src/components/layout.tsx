@@ -44,7 +44,7 @@ interface LayoutProps {
 export default function Layout({ children, hideSidebar = false }: LayoutProps) {
   const [location] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
 
   const navigation = [
     { name: "Dashboard", href: "/dashboard", icon: Home },

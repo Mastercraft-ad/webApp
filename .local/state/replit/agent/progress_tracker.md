@@ -145,6 +145,7 @@ Build a comprehensive Personal Note-Taking System integrated with a Bible study 
 ✅ Rich text editor with comprehensive formatting options
 ✅ Categories, tags, and templates are functional
 ✅ Responsive UI for Bible Reader and Audio pages (mobile, tablet, desktop)
+✅ Sidebar collapsed by default - menu icon always visible
 🚧 Advanced features (verse linking, attachments, sharing, export) are pending
 
 ## Next Steps
