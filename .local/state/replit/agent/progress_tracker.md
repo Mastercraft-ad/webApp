@@ -72,6 +72,30 @@ Build a comprehensive Personal Note-Taking System integrated with a Bible study 
 - [x] Search notes by title and content
 - [x] Timestamps with relative time display
 
+## Audio Streaming - Sermons (MOCKUP UI)
+- [x] Sermon library (1000+ sermons mock data)
+- [x] Sermon categories (doctrinal, topical, expository, evangelistic, devotional, prophetic)
+- [x] Sermon series tracking with progress
+- [x] Multi-church sermon integration
+- [x] Search sermons by speaker/preacher, church/ministry, Bible passage, topic, series, date
+- [x] Advanced audio player with play, pause, skip forward/back, playback speed (0.5x to 2x), volume control, progress bar with seek, shuffle and repeat
+- [x] Sermon queue management
+- [x] Create sermon playlists
+- [x] Sermon bookmarking
+- [x] Recently played sermons
+- [x] Continue where you left off
+- [x] Sermon transcripts (searchable text)
+- [x] Sermon notes section
+- [x] Sermon takeaways and highlights
+- [x] Share sermon clips (specific timestamps)
+- [x] Download sermons for offline listening
+- [x] Subscribe to favorite preachers/churches
+- [x] Sermon recommendations
+- [x] Sleep timer
+- [x] Audio quality selection (low/medium/high)
+- [x] Sermon ratings and reviews
+- [x] Sermon discussion comments
+
 ## Features In Progress / Pending
 - [ ] Verse linking UI (allow users to link specific Bible verses to notes)
 - [ ] Folder system UI for hierarchical organization
