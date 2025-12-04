@@ -169,3 +169,21 @@ Preferred communication style: Simple, everyday language.
 - Email service: nodemailer (in dependencies)
 - Payment processing: Stripe
 - AI capabilities: OpenAI, Google Generative AI
+
+## Recent Changes
+
+### December 4, 2025 - Audio & Sermons Page Responsive Redesign
+- **Complete rewrite** of the Audio page (`client/src/pages/audio.tsx`) for full responsiveness
+- **Layout improvements:**
+  - Full-height flex column layout that works across all screen sizes
+  - Horizontally scrollable tabs on mobile with proper icons
+  - Category filter pills scroll horizontally instead of wrapping
+- **Mobile optimizations:**
+  - Sermon cards with responsive sizing (w-20/w-28/w-32 for thumbnails)
+  - Queue panel shows on desktop, accessible via Sheet on mobile/tablet
+  - Filter options in a Sheet for mobile
+  - Full-screen player Sheet when tapping the mini player
+- **Player bar:**
+  - Desktop: Full controls with play/pause, skip, shuffle, repeat, volume, playback speed
+  - Mobile: Compact player bar with tap-to-expand full player
+- **Sidebar:** Set to collapsed by default so menu icon is always visible
