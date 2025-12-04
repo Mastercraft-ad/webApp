@@ -17,7 +17,9 @@ import {
   Library,
   Baby,
   Sun,
-  MessageSquare
+  MessageSquare,
+  PanelLeftClose,
+  PanelLeftOpen
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -32,6 +34,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -41,6 +44,7 @@ interface LayoutProps {
 export default function Layout({ children, hideSidebar = false }: LayoutProps) {
   const [location] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const navigation = [
     { name: "Dashboard", href: "/dashboard", icon: Home },
@@ -64,26 +68,79 @@ export default function Layout({ children, hideSidebar = false }: LayoutProps) {
     );
   }
 
-  const SidebarContent = () => (
-    <div className="flex flex-col h-full">
-      <div className="p-6">
+  const SidebarContent = ({ collapsed = false }: { collapsed?: boolean }) => (
+    <div className="flex flex-col h-full transition-all duration-300">
+      <div className={cn("p-4 flex items-center", collapsed ? "justify-center" : "justify-between")}>
         <Link href="/dashboard">
-          <h1 className="text-2xl font-bold tracking-tight text-primary cursor-pointer flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white">
+          <div className={cn("flex items-center gap-2 transition-all duration-300", collapsed ? "justify-center" : "")}>
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white shrink-0">
               <span className="font-serif italic">A</span>
             </div>
-            Abideon
-          </h1>
+            {!collapsed && (
+              <h1 className="text-2xl font-bold tracking-tight text-primary cursor-pointer whitespace-nowrap overflow-hidden animate-in fade-in duration-300">
+                Abideon
+              </h1>
+            )}
+          </div>
         </Link>
+        {!collapsed && (
+          <Button variant="ghost" size="icon" onClick={() => setIsSidebarCollapsed(true)} className="hidden md:flex h-8 w-8 text-muted-foreground">
+            <PanelLeftClose className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
-      <div className="flex-1 px-4 space-y-1 overflow-y-auto">
-        <div className="mb-4">
-          <p className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-            Menu
-          </p>
+      <div className="flex-1 px-2 space-y-1 overflow-y-auto overflow-x-hidden scrollbar-thin">
+        <div className="mb-4 py-2">
+          {!collapsed && (
+            <p className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 animate-in fade-in">
+              Menu
+            </p>
+          )}
+          {collapsed && (
+             <Button 
+               variant="ghost" 
+               size="icon" 
+               onClick={() => setIsSidebarCollapsed(false)} 
+               className="mx-auto flex mb-4 h-8 w-8 text-muted-foreground hover:text-foreground"
+               title="Expand Menu"
+             >
+               <PanelLeftOpen className="h-4 w-4" />
+             </Button>
+          )}
+          
           {navigation.map((item) => {
             const isActive = location === item.href;
+            
+            if (collapsed) {
+              return (
+                <Tooltip key={item.name}>
+                  <TooltipTrigger asChild>
+                    <Link href={item.href}>
+                      <div
+                        className={cn(
+                          "group flex items-center justify-center p-2 my-1 rounded-xl transition-colors cursor-pointer mx-auto w-10 h-10",
+                          isActive
+                            ? "bg-primary/10 text-primary"
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        )}
+                      >
+                        <item.icon
+                          className={cn(
+                            "h-5 w-5 shrink-0 transition-colors",
+                            isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
+                          )}
+                        />
+                      </div>
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>{item.name}</p>
+                  </TooltipContent>
+                </Tooltip>
+              );
+            }
+
             return (
               <Link key={item.name} href={item.href}>
                 <div
@@ -96,11 +153,11 @@ export default function Layout({ children, hideSidebar = false }: LayoutProps) {
                 >
                   <item.icon
                     className={cn(
-                      "mr-3 h-5 w-5 flex-shrink-0 transition-colors",
+                      "mr-3 h-5 w-5 shrink-0 transition-colors",
                       isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
                     )}
                   />
-                  {item.name}
+                  <span className="whitespace-nowrap overflow-hidden text-ellipsis">{item.name}</span>
                 </div>
               </Link>
             );
@@ -109,48 +166,89 @@ export default function Layout({ children, hideSidebar = false }: LayoutProps) {
       </div>
 
       <div className="p-4 border-t border-border">
-        <Link href="/settings">
-          <div className={cn(
-            "group flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-colors cursor-pointer mb-1",
-            location === "/settings" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
-          )}>
-            <Settings className="mr-3 h-5 w-5" />
-            Settings
-          </div>
-        </Link>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <div className="flex items-center p-4 mt-2 rounded-xl bg-muted/50 hover:bg-muted cursor-pointer transition-colors">
-              <Avatar className="h-9 w-9">
-                <AvatarImage src="https://github.com/shadcn.png" />
-                <AvatarFallback>JD</AvatarFallback>
-              </Avatar>
-              <div className="ml-3 overflow-hidden flex-1">
-                <p className="text-sm font-medium text-foreground truncate">John Doe</p>
-                <p className="text-xs text-muted-foreground truncate">john@example.com</p>
-              </div>
-            </div>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56" side="top">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
+        {collapsed ? (
+           <div className="flex flex-col items-center gap-2">
+              <Link href="/settings">
+                <div className={cn(
+                  "w-10 h-10 flex items-center justify-center rounded-xl transition-colors cursor-pointer",
+                  location === "/settings" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}>
+                   <Settings className="h-5 w-5" />
+                </div>
+              </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Avatar className="h-9 w-9 cursor-pointer hover:opacity-80">
+                    <AvatarImage src="https://github.com/shadcn.png" />
+                    <AvatarFallback>JD</AvatarFallback>
+                  </Avatar>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" side="right" className="w-56 ml-2">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <Link href="/settings">
+                    <DropdownMenuItem>Profile</DropdownMenuItem>
+                  </Link>
+                  <Link href="/kids">
+                    <DropdownMenuItem className="text-primary font-bold">
+                      <Baby className="mr-2 h-4 w-4" /> Kids Mode
+                    </DropdownMenuItem>
+                  </Link>
+                  <DropdownMenuSeparator />
+                  <Link href="/auth">
+                    <DropdownMenuItem className="text-destructive">
+                      <LogOut className="mr-2 h-4 w-4" /> Log out
+                    </DropdownMenuItem>
+                  </Link>
+                </DropdownMenuContent>
+              </DropdownMenu>
+           </div>
+        ) : (
+          <>
             <Link href="/settings">
-              <DropdownMenuItem>Profile</DropdownMenuItem>
+              <div className={cn(
+                "group flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-colors cursor-pointer mb-1",
+                location === "/settings" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}>
+                <Settings className="mr-3 h-5 w-5" />
+                Settings
+              </div>
             </Link>
-            <Link href="/kids">
-              <DropdownMenuItem className="text-primary font-bold">
-                <Baby className="mr-2 h-4 w-4" /> Kids Mode
-              </DropdownMenuItem>
-            </Link>
-            <DropdownMenuSeparator />
-            <Link href="/auth">
-              <DropdownMenuItem className="text-destructive">
-                <LogOut className="mr-2 h-4 w-4" /> Log out
-              </DropdownMenuItem>
-            </Link>
-          </DropdownMenuContent>
-        </DropdownMenu>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <div className="flex items-center p-4 mt-2 rounded-xl bg-muted/50 hover:bg-muted cursor-pointer transition-colors">
+                  <Avatar className="h-9 w-9">
+                    <AvatarImage src="https://github.com/shadcn.png" />
+                    <AvatarFallback>JD</AvatarFallback>
+                  </Avatar>
+                  <div className="ml-3 overflow-hidden flex-1">
+                    <p className="text-sm font-medium text-foreground truncate">John Doe</p>
+                    <p className="text-xs text-muted-foreground truncate">john@example.com</p>
+                  </div>
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56" side="top">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <Link href="/settings">
+                  <DropdownMenuItem>Profile</DropdownMenuItem>
+                </Link>
+                <Link href="/kids">
+                  <DropdownMenuItem className="text-primary font-bold">
+                    <Baby className="mr-2 h-4 w-4" /> Kids Mode
+                  </DropdownMenuItem>
+                </Link>
+                <DropdownMenuSeparator />
+                <Link href="/auth">
+                  <DropdownMenuItem className="text-destructive">
+                    <LogOut className="mr-2 h-4 w-4" /> Log out
+                  </DropdownMenuItem>
+                </Link>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
+        )}
       </div>
     </div>
   );
@@ -158,8 +256,11 @@ export default function Layout({ children, hideSidebar = false }: LayoutProps) {
   return (
     <div className="min-h-screen bg-background font-sans flex">
       {/* Desktop Sidebar */}
-      <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 border-r border-border bg-card/50 backdrop-blur-sm z-50">
-        <SidebarContent />
+      <div className={cn(
+        "hidden md:flex md:flex-col md:fixed md:inset-y-0 border-r border-border bg-card/50 backdrop-blur-sm z-50 transition-all duration-300",
+        isSidebarCollapsed ? "md:w-20" : "md:w-64"
+      )}>
+        <SidebarContent collapsed={isSidebarCollapsed} />
       </div>
 
       {/* Mobile Header */}
@@ -179,13 +280,16 @@ export default function Layout({ children, hideSidebar = false }: LayoutProps) {
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="p-0 w-64">
-            <SidebarContent />
+            <SidebarContent collapsed={false} />
           </SheetContent>
         </Sheet>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 md:pl-64 flex flex-col min-h-screen">
+      <div className={cn(
+        "flex-1 flex flex-col min-h-screen transition-all duration-300",
+        isSidebarCollapsed ? "md:pl-20" : "md:pl-64"
+      )}>
         {/* Top Bar */}
         <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border bg-background/80 backdrop-blur-md px-6 justify-between md:justify-end">
            <div className="hidden md:flex items-center flex-1 max-w-xl relative">
