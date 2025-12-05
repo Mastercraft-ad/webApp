@@ -172,6 +172,28 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### December 5, 2025 - Comprehensive Responsive Polish & QA Readiness
+- **FullPagePlayer responsive improvements:**
+  - Album art responsive sizing (180px mobile → 240px tablet → 320px desktop)
+  - Title typography scaling with text-lg/xl/2xl/3xl across breakpoints
+  - Action buttons with mobile-friendly sizing and visibility toggling
+  - Volume/speed controls stack vertically on mobile, inline on desktop
+  - Comments/notes sections with responsive spacing
+- **Preachers/Churches tabs:**
+  - Compact card layout with smaller avatars on mobile (h-12 → h-14 → h-16)
+  - Responsive padding and gaps
+  - Icon-only subscribe button on mobile
+- **History tab:**
+  - Continue/recently played cards with mobile-friendly sizing
+  - Resume button shows icon-only on mobile, text on desktop
+  - Done badge shows icon-only on mobile
+- **Data-testid coverage:**
+  - Mobile player controls: button-play-mobile, button-skip-mobile
+  - Resume buttons: button-resume-{id}, button-resume-mobile-{id}
+  - History cards: card-continue-{id}, card-recently-played-{id}
+  - Sermon card actions: button-bookmark-{id}, button-download-{id}, button-sermon-menu-{id}
+  - All dropdown menu items properly tagged for QA
+
 ### December 4, 2025 - Audio & Sermons Page Responsive Redesign
 - **Complete rewrite** of the Audio page (`client/src/pages/audio.tsx`) for full responsiveness
 - **Layout improvements:**
