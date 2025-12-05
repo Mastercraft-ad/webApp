@@ -98,6 +98,7 @@ Build a comprehensive Personal Note-Taking System integrated with a Bible study 
 - [x] Audio quality selection (low/medium/high)
 - [x] Sermon ratings and reviews
 - [x] Sermon discussion comments
+- [x] FullPagePlayer component updated to accept comments and addComment as props (December 5, 2024)
 
 ## Features In Progress / Pending
 - [ ] Verse linking UI (allow users to link specific Bible verses to notes)

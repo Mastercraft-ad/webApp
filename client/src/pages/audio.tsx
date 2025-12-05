@@ -1190,6 +1190,8 @@ export default function AudioPage() {
           onPrevious={handlePreviousSermon}
           formatTime={formatTime}
           onShowToast={showToast}
+          comments={comments}
+          onAddComment={addComment}
         />
       </div>
     );
