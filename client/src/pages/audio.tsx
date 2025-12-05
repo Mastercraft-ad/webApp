@@ -292,6 +292,49 @@ const mockPlaylists = [
   { id: 4, name: "Devotions", sermonCount: 15, image: "https://images.unsplash.com/photo-1507838153414-b4b713384a76?w=400" },
 ];
 
+const mockComments = [
+  {
+    id: 1,
+    userId: 1,
+    userName: "Grace Johnson",
+    userAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100",
+    content: "This sermon really spoke to my heart. The message about faith during difficult times is exactly what I needed to hear today.",
+    timestamp: "2 hours ago",
+    likes: 24,
+    replies: 3,
+  },
+  {
+    id: 2,
+    userId: 2,
+    userName: "Michael Chen",
+    userAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100",
+    content: "Pastor's explanation of Hebrews 11 was so clear and impactful. I've listened to this sermon three times already!",
+    timestamp: "5 hours ago",
+    likes: 18,
+    replies: 1,
+  },
+  {
+    id: 3,
+    userId: 3,
+    userName: "Sarah Williams",
+    userAvatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100",
+    content: "Amen! The part about active faith vs passive waiting was a real eye-opener for me.",
+    timestamp: "1 day ago",
+    likes: 42,
+    replies: 7,
+  },
+  {
+    id: 4,
+    userId: 4,
+    userName: "David Thompson",
+    userAvatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100",
+    content: "Shared this with my small group. We had an amazing discussion about what it means to truly trust God.",
+    timestamp: "2 days ago",
+    likes: 31,
+    replies: 4,
+  },
+];
+
 // Audio Waveform Visualization Component
 function AudioWaveform({ isPlaying, progress }: { isPlaying: boolean; progress: number }) {
   const bars = 60;
@@ -326,8 +369,8 @@ function AudioWaveform({ isPlaying, progress }: { isPlaying: boolean; progress: 
   );
 }
 
-// Full Screen Audio Player Component
-function FullScreenPlayer({ 
+// Full Page Audio Player Component
+function FullPagePlayer({ 
   sermon, 
   isPlaying, 
   currentTime, 
@@ -352,6 +395,8 @@ function FullScreenPlayer({
   onPrevious,
   formatTime,
   onShowToast,
+  comments,
+  onAddComment,
 }: {
   sermon: typeof mockSermons[0];
   isPlaying: boolean;
@@ -377,11 +422,14 @@ function FullScreenPlayer({
   onPrevious: () => void;
   formatTime: (seconds: number) => string;
   onShowToast: (title: string, description?: string) => void;
+  comments: typeof mockComments;
+  onAddComment: (content: string) => void;
 }) {
-  const [activeTab, setActiveTab] = useState<"player" | "transcript" | "notes">("player");
+  const [activeTab, setActiveTab] = useState<"player" | "comments" | "notes">("player");
   const [userNotes, setUserNotes] = useState("");
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [newComment, setNewComment] = useState("");
   const progress = (currentTime / sermon.durationSeconds) * 100;
 
   const handleCopyLink = async () => {
@@ -443,16 +491,13 @@ function FullScreenPlayer({
 
   return (
     <div className="flex flex-col h-full bg-background">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b">
+      {/* Header with back button */}
+      <div className="flex items-center gap-4 p-4 border-b">
         <Button variant="ghost" size="icon" onClick={onClose} data-testid="button-close-player">
           <ChevronDown className="h-5 w-5" />
         </Button>
-        <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="text-xs">
-            <Headphones className="h-3 w-3 mr-1" />
-            {sermon.plays.toLocaleString()} plays
-          </Badge>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm text-muted-foreground truncate">Now Playing</p>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -478,102 +523,166 @@ function FullScreenPlayer({
         </DropdownMenu>
       </div>
 
-      {/* Tabs */}
-      <div className="flex border-b">
-        <button
-          className={`flex-1 py-3 text-sm font-medium transition-colors ${
-            activeTab === "player" 
-              ? "text-primary border-b-2 border-primary" 
-              : "text-muted-foreground"
-          }`}
-          onClick={() => setActiveTab("player")}
-          data-testid="tab-player"
-        >
-          <AudioLines className="h-4 w-4 inline mr-1.5" />
-          Now Playing
-        </button>
-        <button
-          className={`flex-1 py-3 text-sm font-medium transition-colors ${
-            activeTab === "transcript" 
-              ? "text-primary border-b-2 border-primary" 
-              : "text-muted-foreground"
-          }`}
-          onClick={() => setActiveTab("transcript")}
-          data-testid="tab-transcript"
-        >
-          <FileText className="h-4 w-4 inline mr-1.5" />
-          Transcript
-        </button>
-        <button
-          className={`flex-1 py-3 text-sm font-medium transition-colors ${
-            activeTab === "notes" 
-              ? "text-primary border-b-2 border-primary" 
-              : "text-muted-foreground"
-          }`}
-          onClick={() => setActiveTab("notes")}
-          data-testid="tab-notes"
-        >
-          <Quote className="h-4 w-4 inline mr-1.5" />
-          Notes
-        </button>
-      </div>
+      {/* Main Content - Full page layout like Boomplay */}
+      <ScrollArea className="flex-1">
+        <div className="p-4 md:p-6">
+          {/* Album Art and Info Section */}
+          <div className="flex flex-col lg:flex-row gap-6 mb-6">
+            {/* Album Art */}
+            <div className="lg:w-80 flex-shrink-0">
+              <div className="relative aspect-square w-full max-w-[320px] mx-auto lg:mx-0">
+                <motion.div
+                  className="w-full h-full rounded-xl overflow-hidden shadow-2xl"
+                  animate={{ scale: isPlaying ? 1 : 0.98 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <img 
+                    src={sermon.image} 
+                    alt={sermon.title} 
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                </motion.div>
+                
+                {isPlaying && (
+                  <motion.div
+                    className="absolute -inset-2 rounded-xl border-2 border-primary/30"
+                    animate={{ scale: [1, 1.02, 1], opacity: [0.5, 0.8, 0.5] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  />
+                )}
+              </div>
+            </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-hidden">
-        <AnimatePresence mode="wait">
-          {activeTab === "player" && (
-            <motion.div
-              key="player"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              className="h-full flex flex-col p-4 md:p-6"
-            >
-              <ScrollArea className="flex-1">
-                <div className="flex flex-col items-center max-w-lg mx-auto">
-                  {/* Album Art */}
-                  <div className="relative w-full aspect-square max-w-[280px] md:max-w-[320px] mb-6">
-                    <motion.div
-                      className="w-full h-full rounded-2xl overflow-hidden shadow-2xl"
-                      animate={{ scale: isPlaying ? 1 : 0.95 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <img 
-                        src={sermon.image} 
-                        alt={sermon.title} 
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                    </motion.div>
-                    
-                    {/* Animated ring when playing */}
-                    {isPlaying && (
-                      <motion.div
-                        className="absolute -inset-2 rounded-2xl border-2 border-primary/30"
-                        animate={{ scale: [1, 1.02, 1], opacity: [0.5, 0.8, 0.5] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      />
-                    )}
-                  </div>
+            {/* Sermon Info */}
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl md:text-3xl font-bold mb-2">{sermon.title}</h1>
+              
+              <div className="flex items-center gap-2 mb-4">
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback>{sermon.preacher.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-medium text-sm">{sermon.preacher}</p>
+                  <p className="text-xs text-muted-foreground">{sermon.church}</p>
+                </div>
+              </div>
 
-                  {/* Song Info */}
-                  <div className="text-center mb-4 w-full">
-                    <h2 className="font-bold text-xl md:text-2xl mb-2 line-clamp-2">{sermon.title}</h2>
-                    <p className="text-muted-foreground text-base">{sermon.preacher}</p>
-                    <p className="text-sm text-muted-foreground">{sermon.church}</p>
-                    <div className="flex items-center justify-center gap-2 mt-2">
-                      <Badge variant="outline">{sermon.passage}</Badge>
-                      {sermon.series && <Badge variant="secondary">{sermon.series}</Badge>}
-                    </div>
-                  </div>
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2 flex-wrap mb-4">
+                <Button onClick={onPlayPause} data-testid="button-play-main">
+                  {isPlaying ? <Pause className="h-4 w-4 mr-2" /> : <Play className="h-4 w-4 mr-2" />}
+                  {isPlaying ? "Pause" : "Play"}
+                </Button>
+                <Button 
+                  variant={isLiked ? "default" : "outline"} 
+                  onClick={onLikeToggle}
+                  data-testid="button-like"
+                >
+                  <Heart className={`h-4 w-4 mr-1 ${isLiked ? "fill-current" : ""}`} />
+                  {sermon.plays.toLocaleString()}
+                </Button>
+                <DropdownMenu open={showShareMenu} onOpenChange={setShowShareMenu}>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" data-testid="button-share">
+                      <Share2 className="h-4 w-4 mr-1" />
+                      Share
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuItem onClick={handleCopyLink}>
+                      {copiedLink ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
+                      {copiedLink ? "Copied!" : "Copy Link"}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleWebShare}>
+                      <Share className="h-4 w-4 mr-2" />Share via App
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Button variant="outline" data-testid="button-comments-count">
+                  <MessageSquare className="h-4 w-4 mr-1" />
+                  {mockComments.length}
+                </Button>
+              </div>
 
+              {/* Metadata */}
+              <div className="flex flex-wrap gap-2 mb-4">
+                <Badge variant="outline">{sermon.passage}</Badge>
+                {sermon.series && <Badge variant="secondary">{sermon.series}</Badge>}
+                <Badge variant="secondary">{sermon.category}</Badge>
+                <Badge variant="outline">{sermon.topic}</Badge>
+              </div>
+
+              <div className="text-sm text-muted-foreground space-y-1">
+                <p>Date: {sermon.date}</p>
+                <p>Duration: {sermon.duration}</p>
+                <div className="flex items-center gap-1">
+                  <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
+                  <span>{sermon.rating}</span>
+                  <span className="text-muted-foreground">({sermon.reviews} reviews)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Tabs for Comments/Notes */}
+          <div className="border-b mb-4">
+            <div className="flex gap-4">
+              <button
+                className={`pb-3 text-sm font-medium transition-colors ${
+                  activeTab === "player" 
+                    ? "text-primary border-b-2 border-primary" 
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                onClick={() => setActiveTab("player")}
+                data-testid="tab-player"
+              >
+                <AudioLines className="h-4 w-4 inline mr-1.5" />
+                Now Playing
+              </button>
+              <button
+                className={`pb-3 text-sm font-medium transition-colors ${
+                  activeTab === "comments" 
+                    ? "text-primary border-b-2 border-primary" 
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                onClick={() => setActiveTab("comments")}
+                data-testid="tab-comments"
+              >
+                <MessageSquare className="h-4 w-4 inline mr-1.5" />
+                Comments ({comments.length})
+              </button>
+              <button
+                className={`pb-3 text-sm font-medium transition-colors ${
+                  activeTab === "notes" 
+                    ? "text-primary border-b-2 border-primary" 
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                onClick={() => setActiveTab("notes")}
+                data-testid="tab-notes"
+              >
+                <Quote className="h-4 w-4 inline mr-1.5" />
+                Notes
+              </button>
+            </div>
+          </div>
+
+          {/* Tab Content */}
+          <AnimatePresence mode="wait">
+            {activeTab === "player" && (
+              <motion.div
+                key="player"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+              >
+                {/* Player Controls Section */}
+                <div className="space-y-6">
                   {/* Waveform Visualization */}
-                  <div className="w-full mb-4">
-                    <AudioWaveform isPlaying={isPlaying} progress={progress} />
-                  </div>
+                  <AudioWaveform isPlaying={isPlaying} progress={progress} />
 
                   {/* Progress Bar */}
-                  <div className="w-full space-y-2 mb-6">
+                  <div className="space-y-2">
                     <Slider
                       value={[progress]}
                       max={100}
@@ -589,7 +698,7 @@ function FullScreenPlayer({
                   </div>
 
                   {/* Main Controls */}
-                  <div className="flex items-center justify-center gap-4 mb-6">
+                  <div className="flex items-center justify-center gap-4">
                     <Button 
                       variant="ghost" 
                       size="icon" 
@@ -617,31 +726,11 @@ function FullScreenPlayer({
                     </Button>
                     <Button 
                       size="icon" 
-                      className="h-16 w-16 rounded-full shadow-lg"
+                      className="h-14 w-14 rounded-full shadow-lg"
                       onClick={onPlayPause}
-                      data-testid="button-play-main"
+                      data-testid="button-play-controls"
                     >
-                      <AnimatePresence mode="wait">
-                        {isPlaying ? (
-                          <motion.div
-                            key="pause"
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            exit={{ scale: 0 }}
-                          >
-                            <Pause className="h-8 w-8" />
-                          </motion.div>
-                        ) : (
-                          <motion.div
-                            key="play"
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            exit={{ scale: 0 }}
-                          >
-                            <Play className="h-8 w-8 ml-1" />
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                      {isPlaying ? <Pause className="h-7 w-7" /> : <Play className="h-7 w-7 ml-1" />}
                     </Button>
                     <Button 
                       variant="ghost" 
@@ -671,7 +760,7 @@ function FullScreenPlayer({
                   </div>
 
                   {/* Volume and Speed Controls */}
-                  <div className="flex items-center justify-center gap-4 w-full max-w-xs mb-6">
+                  <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
                     <Button variant="ghost" size="icon" onClick={onMuteToggle} data-testid="button-mute">
                       {isMuted ? <VolumeX className="h-5 w-5" /> : volume[0] < 50 ? <Volume1 className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
                     </Button>
@@ -696,96 +785,78 @@ function FullScreenPlayer({
                       </SelectContent>
                     </Select>
                   </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex items-center justify-center gap-2 flex-wrap">
-                    <Button 
-                      variant={isLiked ? "default" : "outline"} 
-                      size="sm"
-                      onClick={onLikeToggle}
-                      data-testid="button-like"
-                    >
-                      <Heart className={`h-4 w-4 mr-1 ${isLiked ? "fill-current" : ""}`} />
-                      {isLiked ? "Liked" : "Like"}
-                    </Button>
-                    <Button 
-                      variant={isBookmarked ? "default" : "outline"} 
-                      size="sm"
-                      onClick={onBookmarkToggle}
-                      data-testid="button-bookmark"
-                    >
-                      {isBookmarked ? <BookmarkCheck className="h-4 w-4 mr-1" /> : <Bookmark className="h-4 w-4 mr-1" />}
-                      {isBookmarked ? "Saved" : "Save"}
-                    </Button>
-                    <DropdownMenu open={showShareMenu} onOpenChange={setShowShareMenu}>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm" data-testid="button-share">
-                          <Share2 className="h-4 w-4 mr-1" />Share
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="center">
-                        <DropdownMenuItem onClick={handleCopyLink}>
-                          {copiedLink ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
-                          {copiedLink ? "Copied!" : "Copy Link"}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={handleWebShare}>
-                          <Share className="h-4 w-4 mr-2" />Share via App
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <ExternalLink className="h-4 w-4 mr-2" />Open in Browser
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                    <Button variant="outline" size="sm" data-testid="button-download">
-                      <Download className="h-4 w-4 mr-1" />Download
-                    </Button>
-                  </div>
-
-                  {/* Rating */}
-                  <div className="flex items-center gap-2 mt-6 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
-                      <span className="font-medium">{sermon.rating}</span>
-                    </div>
-                    <span>|</span>
-                    <span>{sermon.reviews} reviews</span>
-                  </div>
                 </div>
-              </ScrollArea>
-            </motion.div>
-          )}
+              </motion.div>
+            )}
 
-          {activeTab === "transcript" && (
+          {activeTab === "comments" && (
             <motion.div
-              key="transcript"
+              key="comments"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="h-full"
+              className="h-full flex flex-col"
             >
-              <ScrollArea className="h-full">
-                <div className="p-4 md:p-6">
-                  {sermon.hasTranscript && sermon.transcript ? (
-                    <div className="prose prose-sm dark:prose-invert max-w-none">
-                      <div className="flex items-center gap-2 mb-4">
-                        <FileText className="h-5 w-5 text-primary" />
-                        <h3 className="text-lg font-semibold m-0">Sermon Transcript</h3>
-                      </div>
-                      <div className="text-foreground leading-relaxed whitespace-pre-wrap">
-                        {sermon.transcript}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-64 text-center">
-                      <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-                      <h3 className="font-semibold mb-2">No Transcript Available</h3>
-                      <p className="text-sm text-muted-foreground">
-                        A transcript for this sermon has not been generated yet.
-                      </p>
-                    </div>
-                  )}
+              <div className="p-4 md:p-6 flex-1 flex flex-col min-h-0">
+                <div className="flex items-center justify-between gap-2 mb-4">
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className="h-5 w-5 text-primary" />
+                    <h3 className="text-lg font-semibold">Comments</h3>
+                    <Badge variant="secondary" className="text-xs">{mockComments.length}</Badge>
+                  </div>
                 </div>
-              </ScrollArea>
+                
+                <div className="flex gap-2 mb-4">
+                  <Input
+                    placeholder="Add a comment..."
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    className="flex-1"
+                    data-testid="input-comment"
+                  />
+                  <Button 
+                    size="sm" 
+                    disabled={!newComment.trim()}
+                    onClick={() => {
+                      onShowToast("Comment Posted", "Your comment has been added.");
+                      setNewComment("");
+                    }}
+                    data-testid="button-post-comment"
+                  >
+                    Post
+                  </Button>
+                </div>
+
+                <ScrollArea className="flex-1">
+                  <div className="space-y-4 pr-2">
+                    {mockComments.map((comment) => (
+                      <div key={comment.id} className="flex gap-3" data-testid={`comment-${comment.id}`}>
+                        <Avatar className="h-9 w-9 flex-shrink-0">
+                          <AvatarImage src={comment.userAvatar} />
+                          <AvatarFallback>{comment.userName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium text-sm">{comment.userName}</span>
+                            <span className="text-xs text-muted-foreground">{comment.timestamp}</span>
+                          </div>
+                          <p className="text-sm text-foreground mt-1">{comment.content}</p>
+                          <div className="flex items-center gap-4 mt-2">
+                            <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                              <Heart className="h-3.5 w-3.5" />
+                              <span>{comment.likes}</span>
+                            </button>
+                            <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                              <MessageSquare className="h-3.5 w-3.5" />
+                              <span>{comment.replies} replies</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
             </motion.div>
           )}
 
@@ -820,10 +891,11 @@ function FullScreenPlayer({
               </div>
             </motion.div>
           )}
-        </AnimatePresence>
-      </div>
+          </AnimatePresence>
+        </div>
+      </ScrollArea>
 
-      {/* Mini player bar at bottom when on transcript/notes */}
+      {/* Mini player bar at bottom */}
       {activeTab !== "player" && (
         <div className="border-t p-3 flex items-center gap-3">
           <div className="h-10 w-10 rounded-lg overflow-hidden flex-shrink-0">
@@ -869,9 +941,24 @@ export default function AudioPage() {
   const [showPlayerSheet, setShowPlayerSheet] = useState(false);
   const [showFilterSheet, setShowFilterSheet] = useState(false);
   const [showFullPlayer, setShowFullPlayer] = useState(false);
+  const [comments, setComments] = useState(mockComments);
   
   const showToast = (title: string, description?: string) => {
     toast({ title, description });
+  };
+  
+  const addComment = (content: string) => {
+    const newComment = {
+      id: Date.now(),
+      userId: 0,
+      userName: "You",
+      userAvatar: "",
+      content,
+      timestamp: "Just now",
+      likes: 0,
+      replies: 0,
+    };
+    setComments(prev => [newComment, ...prev]);
   };
   
   // Sermon reactions state (persisted across player open/close)
@@ -1074,6 +1161,39 @@ export default function AudioPage() {
       </Card>
     );
   };
+
+  if (showFullPlayer) {
+    return (
+      <div className="fixed inset-0 z-50 bg-background flex flex-col">
+        <FullPagePlayer
+          sermon={selectedSermon}
+          isPlaying={isPlaying}
+          currentTime={currentTime}
+          volume={volume}
+          isMuted={isMuted}
+          playbackSpeed={playbackSpeed}
+          repeatMode={repeatMode}
+          isShuffled={isShuffled}
+          isLiked={isCurrentSermonLiked}
+          isBookmarked={isCurrentSermonBookmarked}
+          onPlayPause={() => setIsPlaying(!isPlaying)}
+          onSeek={setCurrentTime}
+          onVolumeChange={setVolume}
+          onMuteToggle={() => setIsMuted(!isMuted)}
+          onSpeedChange={setPlaybackSpeed}
+          onRepeatChange={() => setRepeatMode(repeatMode === "off" ? "all" : repeatMode === "all" ? "one" : "off")}
+          onShuffleToggle={() => setIsShuffled(!isShuffled)}
+          onLikeToggle={toggleLike}
+          onBookmarkToggle={toggleBookmark}
+          onClose={() => setShowFullPlayer(false)}
+          onNext={handleNextSermon}
+          onPrevious={handlePreviousSermon}
+          formatTime={formatTime}
+          onShowToast={showToast}
+        />
+      </div>
+    );
+  }
 
   return (
     <Layout>
@@ -1565,37 +1685,6 @@ export default function AudioPage() {
         </div>
       </div>
 
-      {/* Full Screen Player Dialog */}
-      <Dialog open={showFullPlayer} onOpenChange={setShowFullPlayer}>
-        <DialogContent className="max-w-full w-full h-[100dvh] max-h-[100dvh] p-0 gap-0 border-0 rounded-none sm:rounded-lg sm:max-w-2xl sm:h-[90vh] sm:max-h-[90vh]">
-          <FullScreenPlayer
-            sermon={selectedSermon}
-            isPlaying={isPlaying}
-            currentTime={currentTime}
-            volume={volume}
-            isMuted={isMuted}
-            playbackSpeed={playbackSpeed}
-            repeatMode={repeatMode}
-            isShuffled={isShuffled}
-            isLiked={isCurrentSermonLiked}
-            isBookmarked={isCurrentSermonBookmarked}
-            onPlayPause={() => setIsPlaying(!isPlaying)}
-            onSeek={setCurrentTime}
-            onVolumeChange={setVolume}
-            onMuteToggle={() => setIsMuted(!isMuted)}
-            onSpeedChange={setPlaybackSpeed}
-            onRepeatChange={() => setRepeatMode(repeatMode === "off" ? "all" : repeatMode === "all" ? "one" : "off")}
-            onShuffleToggle={() => setIsShuffled(!isShuffled)}
-            onLikeToggle={toggleLike}
-            onBookmarkToggle={toggleBookmark}
-            onClose={() => setShowFullPlayer(false)}
-            onNext={handleNextSermon}
-            onPrevious={handlePreviousSermon}
-            formatTime={formatTime}
-            onShowToast={showToast}
-          />
-        </DialogContent>
-      </Dialog>
     </Layout>
   );
 }
