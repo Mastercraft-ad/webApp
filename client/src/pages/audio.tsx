@@ -506,17 +506,17 @@ function FullPagePlayer({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>
+            <DropdownMenuItem data-testid="menu-add-to-playlist">
               <Plus className="h-4 w-4 mr-2" />Add to Playlist
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem data-testid="menu-download">
               <Download className="h-4 w-4 mr-2" />Download
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem data-testid="menu-sleep-timer">
               <Timer className="h-4 w-4 mr-2" />Sleep Timer
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem data-testid="menu-audio-quality">
               <Settings2 className="h-4 w-4 mr-2" />Audio Quality
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -525,12 +525,12 @@ function FullPagePlayer({
 
       {/* Main Content - Full page layout like Boomplay */}
       <ScrollArea className="flex-1">
-        <div className="p-4 md:p-6">
+        <div className="p-3 sm:p-4 md:p-6">
           {/* Album Art and Info Section */}
-          <div className="flex flex-col lg:flex-row gap-6 mb-6">
+          <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 mb-4 sm:mb-6">
             {/* Album Art */}
             <div className="lg:w-80 flex-shrink-0">
-              <div className="relative aspect-square w-full max-w-[320px] mx-auto lg:mx-0">
+              <div className="relative aspect-square w-full max-w-[180px] sm:max-w-[240px] md:max-w-[320px] mx-auto lg:mx-0">
                 <motion.div
                   className="w-full h-full rounded-xl overflow-hidden shadow-2xl"
                   animate={{ scale: isPlaying ? 1 : 0.98 }}
@@ -555,69 +555,70 @@ function FullPagePlayer({
             </div>
 
             {/* Sermon Info */}
-            <div className="flex-1 min-w-0">
-              <h1 className="text-2xl md:text-3xl font-bold mb-2">{sermon.title}</h1>
+            <div className="flex-1 min-w-0 text-center lg:text-left">
+              <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold mb-2 line-clamp-2">{sermon.title}</h1>
               
-              <div className="flex items-center gap-2 mb-4">
-                <Avatar className="h-8 w-8">
+              <div className="flex items-center justify-center lg:justify-start gap-2 mb-3 sm:mb-4">
+                <Avatar className="h-7 w-7 sm:h-8 sm:w-8">
                   <AvatarFallback>{sermon.preacher.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                 </Avatar>
-                <div>
-                  <p className="font-medium text-sm">{sermon.preacher}</p>
+                <div className="text-left">
+                  <p className="font-medium text-xs sm:text-sm">{sermon.preacher}</p>
                   <p className="text-xs text-muted-foreground">{sermon.church}</p>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-2 flex-wrap mb-4">
-                <Button onClick={onPlayPause} data-testid="button-play-main">
-                  {isPlaying ? <Pause className="h-4 w-4 mr-2" /> : <Play className="h-4 w-4 mr-2" />}
-                  {isPlaying ? "Pause" : "Play"}
+              <div className="flex items-center justify-center lg:justify-start gap-1.5 sm:gap-2 flex-wrap mb-3 sm:mb-4">
+                <Button size="sm" className="sm:size-default" onClick={onPlayPause} data-testid="button-play-main">
+                  {isPlaying ? <Pause className="h-4 w-4 sm:mr-2" /> : <Play className="h-4 w-4 sm:mr-2" />}
+                  <span className="hidden sm:inline">{isPlaying ? "Pause" : "Play"}</span>
                 </Button>
                 <Button 
+                  size="sm"
                   variant={isLiked ? "default" : "outline"} 
                   onClick={onLikeToggle}
                   data-testid="button-like"
                 >
-                  <Heart className={`h-4 w-4 mr-1 ${isLiked ? "fill-current" : ""}`} />
-                  {sermon.plays.toLocaleString()}
+                  <Heart className={`h-4 w-4 ${isLiked ? "fill-current" : ""}`} />
+                  <span className="ml-1 hidden sm:inline">{sermon.plays.toLocaleString()}</span>
                 </Button>
                 <DropdownMenu open={showShareMenu} onOpenChange={setShowShareMenu}>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" data-testid="button-share">
-                      <Share2 className="h-4 w-4 mr-1" />
-                      Share
+                    <Button size="sm" variant="outline" data-testid="button-share">
+                      <Share2 className="h-4 w-4" />
+                      <span className="ml-1 hidden sm:inline">Share</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start">
-                    <DropdownMenuItem onClick={handleCopyLink}>
+                    <DropdownMenuItem onClick={handleCopyLink} data-testid="menu-copy-link">
                       {copiedLink ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
                       {copiedLink ? "Copied!" : "Copy Link"}
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleWebShare}>
+                    <DropdownMenuItem onClick={handleWebShare} data-testid="menu-share-via-app">
                       <Share className="h-4 w-4 mr-2" />Share via App
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <Button variant="outline" data-testid="button-comments-count">
-                  <MessageSquare className="h-4 w-4 mr-1" />
-                  {mockComments.length}
+                <Button size="sm" variant="outline" data-testid="button-comments-count">
+                  <MessageSquare className="h-4 w-4" />
+                  <span className="ml-1">{mockComments.length}</span>
                 </Button>
               </div>
 
               {/* Metadata */}
-              <div className="flex flex-wrap gap-2 mb-4">
-                <Badge variant="outline">{sermon.passage}</Badge>
-                {sermon.series && <Badge variant="secondary">{sermon.series}</Badge>}
-                <Badge variant="secondary">{sermon.category}</Badge>
-                <Badge variant="outline">{sermon.topic}</Badge>
+              <div className="flex flex-wrap justify-center lg:justify-start gap-1.5 sm:gap-2 mb-3 sm:mb-4">
+                <Badge variant="outline" className="text-xs">{sermon.passage}</Badge>
+                {sermon.series && <Badge variant="secondary" className="text-xs">{sermon.series}</Badge>}
+                <Badge variant="secondary" className="text-xs">{sermon.category}</Badge>
+                <Badge variant="outline" className="text-xs">{sermon.topic}</Badge>
               </div>
 
-              <div className="text-sm text-muted-foreground space-y-1">
+              <div className="text-xs sm:text-sm text-muted-foreground space-y-0.5 sm:space-y-1">
                 <p>Date: {sermon.date}</p>
                 <p>Duration: {sermon.duration}</p>
-                <div className="flex items-center gap-1">
-                  <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
+                <div className="flex items-center justify-center lg:justify-start gap-1">
+                  <Star className="h-3.5 w-3.5 sm:h-4 sm:w-4 fill-yellow-500 text-yellow-500" />
                   <span>{sermon.rating}</span>
                   <span className="text-muted-foreground">({sermon.reviews} reviews)</span>
                 </div>
@@ -626,8 +627,8 @@ function FullPagePlayer({
           </div>
 
           {/* Tabs for Comments/Notes */}
-          <div className="border-b mb-4">
-            <div className="flex gap-4">
+          <div className="border-b mb-3 sm:mb-4">
+            <div className="flex gap-2 sm:gap-4 overflow-x-auto scrollbar-none">
               <button
                 className={`pb-3 text-sm font-medium transition-colors ${
                   activeTab === "player" 
@@ -677,12 +678,12 @@ function FullPagePlayer({
                 exit={{ opacity: 0, y: -10 }}
               >
                 {/* Player Controls Section */}
-                <div className="space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                   {/* Waveform Visualization */}
                   <AudioWaveform isPlaying={isPlaying} progress={progress} />
 
                   {/* Progress Bar */}
-                  <div className="space-y-2">
+                  <div className="space-y-1 sm:space-y-2">
                     <Slider
                       value={[progress]}
                       max={100}
@@ -697,82 +698,92 @@ function FullPagePlayer({
                     </div>
                   </div>
 
-                  {/* Main Controls */}
-                  <div className="flex items-center justify-center gap-4">
+                  {/* Main Controls - Responsive layout */}
+                  <div className="flex items-center justify-center gap-2 sm:gap-3 md:gap-4">
                     <Button 
                       variant="ghost" 
                       size="icon" 
+                      className="h-8 w-8 sm:h-9 sm:w-9"
                       onClick={onShuffleToggle}
-                      className={isShuffled ? "text-primary" : ""}
                       data-testid="button-shuffle"
                     >
-                      <Shuffle className="h-5 w-5" />
+                      <Shuffle className={`h-4 w-4 sm:h-5 sm:w-5 ${isShuffled ? "text-primary" : ""}`} />
                     </Button>
                     <Button 
                       variant="ghost" 
-                      size="icon" 
+                      size="icon"
+                      className="h-8 w-8 sm:h-9 sm:w-9"
                       onClick={() => onSeek(Math.max(0, currentTime - 15))}
                       data-testid="button-rewind"
                     >
-                      <RotateCcw className="h-6 w-6" />
+                      <RotateCcw className="h-5 w-5 sm:h-6 sm:w-6" />
                     </Button>
                     <Button 
                       variant="ghost" 
                       size="icon"
+                      className="h-8 w-8 sm:h-9 sm:w-9"
                       onClick={onPrevious}
                       data-testid="button-previous"
                     >
-                      <SkipBack className="h-6 w-6" />
+                      <SkipBack className="h-5 w-5 sm:h-6 sm:w-6" />
                     </Button>
                     <Button 
                       size="icon" 
-                      className="h-14 w-14 rounded-full shadow-lg"
+                      className="h-12 w-12 sm:h-14 sm:w-14 rounded-full shadow-lg"
                       onClick={onPlayPause}
                       data-testid="button-play-controls"
                     >
-                      {isPlaying ? <Pause className="h-7 w-7" /> : <Play className="h-7 w-7 ml-1" />}
+                      {isPlaying ? <Pause className="h-6 w-6 sm:h-7 sm:w-7" /> : <Play className="h-6 w-6 sm:h-7 sm:w-7 ml-0.5" />}
                     </Button>
                     <Button 
                       variant="ghost" 
                       size="icon"
+                      className="h-8 w-8 sm:h-9 sm:w-9"
                       onClick={onNext}
                       data-testid="button-next"
                     >
-                      <SkipForward className="h-6 w-6" />
+                      <SkipForward className="h-5 w-5 sm:h-6 sm:w-6" />
                     </Button>
                     <Button 
                       variant="ghost" 
-                      size="icon" 
+                      size="icon"
+                      className="h-8 w-8 sm:h-9 sm:w-9"
                       onClick={() => onSeek(Math.min(sermon.durationSeconds, currentTime + 15))}
                       data-testid="button-forward"
                     >
-                      <RotateCw className="h-6 w-6" />
+                      <RotateCw className="h-5 w-5 sm:h-6 sm:w-6" />
                     </Button>
                     <Button 
                       variant="ghost" 
-                      size="icon" 
+                      size="icon"
+                      className="h-8 w-8 sm:h-9 sm:w-9"
                       onClick={onRepeatChange}
-                      className={repeatMode !== "off" ? "text-primary" : ""}
                       data-testid="button-repeat"
                     >
-                      {repeatMode === "one" ? <Repeat1 className="h-5 w-5" /> : <Repeat className="h-5 w-5" />}
+                      {repeatMode === "one" ? (
+                        <Repeat1 className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                      ) : (
+                        <Repeat className={`h-4 w-4 sm:h-5 sm:w-5 ${repeatMode === "all" ? "text-primary" : ""}`} />
+                      )}
                     </Button>
                   </div>
 
-                  {/* Volume and Speed Controls */}
-                  <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
-                    <Button variant="ghost" size="icon" onClick={onMuteToggle} data-testid="button-mute">
-                      {isMuted ? <VolumeX className="h-5 w-5" /> : volume[0] < 50 ? <Volume1 className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
-                    </Button>
-                    <Slider 
-                      value={isMuted ? [0] : volume} 
-                      max={100} 
-                      className="flex-1" 
-                      onValueChange={onVolumeChange}
-                      data-testid="slider-volume"
-                    />
+                  {/* Volume and Speed Controls - Stack on mobile */}
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 max-w-md mx-auto">
+                    <div className="flex items-center gap-2 w-full sm:flex-1">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0" onClick={onMuteToggle} data-testid="button-mute">
+                        {isMuted ? <VolumeX className="h-4 w-4 sm:h-5 sm:w-5" /> : volume[0] < 50 ? <Volume1 className="h-4 w-4 sm:h-5 sm:w-5" /> : <Volume2 className="h-4 w-4 sm:h-5 sm:w-5" />}
+                      </Button>
+                      <Slider 
+                        value={isMuted ? [0] : volume} 
+                        max={100} 
+                        className="flex-1" 
+                        onValueChange={onVolumeChange}
+                        data-testid="slider-volume"
+                      />
+                    </div>
                     <Select value={playbackSpeed} onValueChange={onSpeedChange}>
-                      <SelectTrigger className="w-20" data-testid="select-speed">
+                      <SelectTrigger className="w-full sm:w-20" data-testid="select-speed">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -797,16 +808,16 @@ function FullPagePlayer({
               exit={{ opacity: 0, x: -20 }}
               className="h-full flex flex-col"
             >
-              <div className="p-4 md:p-6 flex-1 flex flex-col min-h-0">
-                <div className="flex items-center justify-between gap-2 mb-4">
+              <div className="flex-1 flex flex-col min-h-0">
+                <div className="flex items-center justify-between gap-2 mb-3 sm:mb-4">
                   <div className="flex items-center gap-2">
-                    <MessageSquare className="h-5 w-5 text-primary" />
-                    <h3 className="text-lg font-semibold">Comments</h3>
+                    <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                    <h3 className="text-base sm:text-lg font-semibold">Comments</h3>
                     <Badge variant="secondary" className="text-xs">{mockComments.length}</Badge>
                   </div>
                 </div>
                 
-                <div className="flex gap-2 mb-4">
+                <div className="flex flex-col sm:flex-row gap-2 mb-3 sm:mb-4">
                   <Input
                     placeholder="Add a comment..."
                     value={newComment}
@@ -816,6 +827,7 @@ function FullPagePlayer({
                   />
                   <Button 
                     size="sm" 
+                    className="w-full sm:w-auto"
                     disabled={!newComment.trim()}
                     onClick={() => {
                       onShowToast("Comment Posted", "Your comment has been added.");
@@ -828,26 +840,26 @@ function FullPagePlayer({
                 </div>
 
                 <ScrollArea className="flex-1">
-                  <div className="space-y-4 pr-2">
+                  <div className="space-y-3 sm:space-y-4 pr-2">
                     {mockComments.map((comment) => (
-                      <div key={comment.id} className="flex gap-3" data-testid={`comment-${comment.id}`}>
-                        <Avatar className="h-9 w-9 flex-shrink-0">
+                      <div key={comment.id} className="flex gap-2 sm:gap-3" data-testid={`comment-${comment.id}`}>
+                        <Avatar className="h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0">
                           <AvatarImage src={comment.userAvatar} />
                           <AvatarFallback>{comment.userName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-medium text-sm">{comment.userName}</span>
+                          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                            <span className="font-medium text-xs sm:text-sm">{comment.userName}</span>
                             <span className="text-xs text-muted-foreground">{comment.timestamp}</span>
                           </div>
-                          <p className="text-sm text-foreground mt-1">{comment.content}</p>
-                          <div className="flex items-center gap-4 mt-2">
+                          <p className="text-xs sm:text-sm text-foreground mt-1">{comment.content}</p>
+                          <div className="flex items-center gap-3 sm:gap-4 mt-2">
                             <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                              <Heart className="h-3.5 w-3.5" />
+                              <Heart className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                               <span>{comment.likes}</span>
                             </button>
                             <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                              <MessageSquare className="h-3.5 w-3.5" />
+                              <MessageSquare className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                               <span>{comment.replies} replies</span>
                             </button>
                           </div>
@@ -868,19 +880,19 @@ function FullPagePlayer({
               exit={{ opacity: 0, x: -20 }}
               className="h-full flex flex-col"
             >
-              <div className="p-4 md:p-6 flex-1 flex flex-col">
-                <div className="flex items-center gap-2 mb-4">
-                  <Quote className="h-5 w-5 text-primary" />
-                  <h3 className="text-lg font-semibold">Your Notes</h3>
+              <div className="flex-1 flex flex-col">
+                <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                  <Quote className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                  <h3 className="text-base sm:text-lg font-semibold">Your Notes</h3>
                 </div>
                 <Textarea
                   placeholder="Write your notes, reflections, and takeaways from this sermon..."
                   value={userNotes}
                   onChange={(e) => setUserNotes(e.target.value)}
-                  className="flex-1 min-h-[200px] resize-none"
+                  className="flex-1 min-h-[150px] sm:min-h-[200px] resize-none text-sm sm:text-base"
                   data-testid="textarea-notes"
                 />
-                <div className="flex items-center justify-between mt-4">
+                <div className="flex items-center justify-between gap-2 mt-3 sm:mt-4">
                   <p className="text-xs text-muted-foreground">
                     {userNotes.length} characters
                   </p>
@@ -1133,24 +1145,24 @@ export default function AudioPage() {
                   <span className="hidden sm:inline">{sermon.plays.toLocaleString()} plays</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleBookmarkClick}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleBookmarkClick} data-testid={`button-bookmark-${sermon.id}`}>
                     {isBookmarked ? <BookmarkCheck className="h-4 w-4 text-primary" /> : <Bookmark className="h-4 w-4" />}
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 hidden sm:flex" onClick={(e) => e.stopPropagation()}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 hidden sm:flex" onClick={(e) => e.stopPropagation()} data-testid={`button-download-${sermon.id}`}>
                     <Download className="h-4 w-4" />
                   </Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()} data-testid={`button-sermon-menu-${sermon.id}`}>
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem>Add to Queue</DropdownMenuItem>
-                      <DropdownMenuItem>Add to Playlist</DropdownMenuItem>
-                      <DropdownMenuItem>Share</DropdownMenuItem>
+                      <DropdownMenuItem data-testid={`menu-add-to-queue-${sermon.id}`}>Add to Queue</DropdownMenuItem>
+                      <DropdownMenuItem data-testid={`menu-add-to-playlist-${sermon.id}`}>Add to Playlist</DropdownMenuItem>
+                      <DropdownMenuItem data-testid={`menu-share-${sermon.id}`}>Share</DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem>Download</DropdownMenuItem>
+                      <DropdownMenuItem data-testid={`menu-download-${sermon.id}`}>Download</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -1258,7 +1270,7 @@ export default function AudioPage() {
                     <ListMusic className="h-4 w-4" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-[300px] sm:w-[350px]">
+                <SheetContent side="right" className="w-[85vw] max-w-[350px] sm:w-[350px]">
                   <SheetHeader className="mb-4">
                     <SheetTitle className="flex items-center gap-2">
                       <ListMusic className="h-5 w-5" />Queue
@@ -1275,7 +1287,7 @@ export default function AudioPage() {
                     <Filter className="h-4 w-4" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-[300px] sm:w-[350px]">
+                <SheetContent side="right" className="w-[85vw] max-w-[350px] sm:w-[350px]">
                   <SheetHeader className="mb-4">
                     <SheetTitle>Filter Sermons</SheetTitle>
                   </SheetHeader>
@@ -1396,21 +1408,21 @@ export default function AudioPage() {
               {/* Preachers Tab */}
               <TabsContent value="preachers" className="flex-1 m-0 overflow-hidden">
                 <ScrollArea className="h-full">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pr-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 pr-4">
                     {preachers.map(preacher => (
                       <Card key={preacher.id} className="cursor-pointer hover-elevate" data-testid={`card-preacher-${preacher.id}`}>
-                        <CardContent className="p-4">
-                          <div className="flex items-center gap-4">
-                            <Avatar className="h-14 w-14 md:h-16 md:w-16">
+                        <CardContent className="p-3 sm:p-4">
+                          <div className="flex items-center gap-3 sm:gap-4">
+                            <Avatar className="h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16">
                               <AvatarImage src={preacher.avatar} />
                               <AvatarFallback>{preacher.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                             </Avatar>
                             <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-sm md:text-base line-clamp-1">{preacher.name}</h3>
-                              <p className="text-xs md:text-sm text-muted-foreground line-clamp-1">{preacher.church}</p>
+                              <h3 className="font-semibold text-xs sm:text-sm md:text-base line-clamp-1">{preacher.name}</h3>
+                              <p className="text-xs text-muted-foreground line-clamp-1">{preacher.church}</p>
                               <p className="text-xs text-muted-foreground">{preacher.sermons} sermons</p>
                             </div>
-                            <Button variant={preacher.subscribed ? "secondary" : "default"} size="sm">
+                            <Button variant={preacher.subscribed ? "secondary" : "default"} size="icon" className="h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0">
                               {preacher.subscribed ? <BellOff className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
                             </Button>
                           </div>
@@ -1424,17 +1436,17 @@ export default function AudioPage() {
               {/* Churches Tab */}
               <TabsContent value="churches" className="flex-1 m-0 overflow-hidden">
                 <ScrollArea className="h-full">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pr-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 pr-4">
                     {churches.map(church => (
                       <Card key={church.id} className="cursor-pointer hover-elevate" data-testid={`card-church-${church.id}`}>
-                        <CardContent className="p-4">
-                          <div className="flex items-center gap-4">
-                            <Avatar className="h-14 w-14 md:h-16 md:w-16">
+                        <CardContent className="p-3 sm:p-4">
+                          <div className="flex items-center gap-3 sm:gap-4">
+                            <Avatar className="h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16">
                               <AvatarFallback className="bg-primary text-primary-foreground">{church.avatar}</AvatarFallback>
                             </Avatar>
                             <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-sm md:text-base line-clamp-1">{church.name}</h3>
-                              <p className="text-xs md:text-sm text-muted-foreground">{church.location}</p>
+                              <h3 className="font-semibold text-xs sm:text-sm md:text-base line-clamp-1">{church.name}</h3>
+                              <p className="text-xs text-muted-foreground">{church.location}</p>
                               <p className="text-xs text-muted-foreground">{church.sermons} sermons</p>
                             </div>
                           </div>
@@ -1479,9 +1491,9 @@ export default function AudioPage() {
               {/* History Tab */}
               <TabsContent value="history" className="flex-1 m-0 overflow-hidden">
                 <ScrollArea className="h-full">
-                  <div className="space-y-4 pr-4">
+                  <div className="space-y-3 sm:space-y-4 pr-4">
                     <div>
-                      <h3 className="font-semibold mb-3 flex items-center gap-2">
+                      <h3 className="font-semibold text-sm sm:text-base mb-2 sm:mb-3 flex items-center gap-2">
                         <History className="h-4 w-4" />Continue Where You Left Off
                       </h3>
                       <div className="space-y-2">
@@ -1490,24 +1502,26 @@ export default function AudioPage() {
                             key={sermon.id} 
                             className="cursor-pointer hover-elevate" 
                             onClick={() => handleSermonClick(sermon)}
+                            data-testid={`card-continue-${sermon.id}`}
                           >
-                            <CardContent className="p-3">
-                              <div className="flex items-center gap-3">
-                                <div className="w-14 h-14 md:w-16 md:h-16 rounded-lg overflow-hidden flex-shrink-0 relative group">
+                            <CardContent className="p-2 sm:p-3">
+                              <div className="flex items-center gap-2 sm:gap-3">
+                                <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-lg overflow-hidden flex-shrink-0 relative group">
                                   <img src={sermon.image} alt={sermon.title} className="w-full h-full object-cover" />
                                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                     <Play className="h-5 w-5 text-white" />
                                   </div>
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <h4 className="font-medium text-sm truncate">{sermon.title}</h4>
+                                  <h4 className="font-medium text-xs sm:text-sm truncate">{sermon.title}</h4>
                                   <p className="text-xs text-muted-foreground truncate">{sermon.preacher}</p>
                                   <div className="flex items-center gap-2 mt-1">
                                     <Progress value={sermon.progress} className="flex-1 h-1.5" />
                                     <span className="text-xs text-muted-foreground">{sermon.progress}%</span>
                                   </div>
                                 </div>
-                                <Button size="sm"><Play className="h-4 w-4 mr-1" />Resume</Button>
+                                <Button size="sm" className="hidden sm:flex" data-testid={`button-resume-${sermon.id}`}><Play className="h-4 w-4 mr-1" />Resume</Button>
+                                <Button size="icon" className="sm:hidden h-8 w-8" data-testid={`button-resume-mobile-${sermon.id}`}><Play className="h-4 w-4" /></Button>
                               </div>
                             </CardContent>
                           </Card>
@@ -1516,27 +1530,31 @@ export default function AudioPage() {
                     </div>
                     <Separator />
                     <div>
-                      <h3 className="font-semibold mb-3">Recently Played</h3>
+                      <h3 className="font-semibold text-sm sm:text-base mb-2 sm:mb-3">Recently Played</h3>
                       <div className="space-y-2">
                         {recentlyPlayed.map(sermon => (
                           <Card 
                             key={sermon.id} 
                             className="cursor-pointer hover-elevate" 
                             onClick={() => handleSermonClick(sermon)}
+                            data-testid={`card-recently-played-${sermon.id}`}
                           >
-                            <CardContent className="p-3">
-                              <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 rounded overflow-hidden flex-shrink-0">
+                            <CardContent className="p-2 sm:p-3">
+                              <div className="flex items-center gap-2 sm:gap-3">
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded overflow-hidden flex-shrink-0">
                                   <img src={sermon.image} alt={sermon.title} className="w-full h-full object-cover" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <h4 className="font-medium text-sm truncate">{sermon.title}</h4>
-                                  <p className="text-xs text-muted-foreground">{sermon.preacher} | {sermon.lastPlayed}</p>
+                                  <h4 className="font-medium text-xs sm:text-sm truncate">{sermon.title}</h4>
+                                  <p className="text-xs text-muted-foreground truncate">{sermon.preacher} | {sermon.lastPlayed}</p>
                                 </div>
                                 {sermon.progress === 100 && (
-                                  <Badge variant="secondary" className="text-xs">
+                                  <Badge variant="secondary" className="text-xs hidden sm:flex" data-testid={`badge-done-${sermon.id}`}>
                                     <CheckCircle2 className="h-3 w-3 mr-1" />Done
                                   </Badge>
+                                )}
+                                {sermon.progress === 100 && (
+                                  <CheckCircle2 className="h-4 w-4 text-primary sm:hidden flex-shrink-0" data-testid={`icon-done-${sermon.id}`} />
                                 )}
                               </div>
                             </CardContent>
@@ -1675,10 +1693,10 @@ export default function AudioPage() {
                 <Progress value={progress} className="h-1 mt-1" />
               </div>
               <div className="flex items-center gap-1">
-                <Button variant="ghost" size="icon" className="h-10 w-10" onClick={(e) => { e.stopPropagation(); setIsPlaying(!isPlaying); }}>
+                <Button variant="ghost" size="icon" className="h-10 w-10" onClick={(e) => { e.stopPropagation(); setIsPlaying(!isPlaying); }} data-testid="button-play-mobile">
                   {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
                 </Button>
-                <Button variant="ghost" size="icon" className="h-10 w-10" onClick={(e) => { e.stopPropagation(); setCurrentTime(Math.min(selectedSermon.durationSeconds, currentTime + 15)); }}>
+                <Button variant="ghost" size="icon" className="h-10 w-10" onClick={(e) => { e.stopPropagation(); setCurrentTime(Math.min(selectedSermon.durationSeconds, currentTime + 15)); }} data-testid="button-skip-mobile">
                   <SkipForward className="h-5 w-5" />
                 </Button>
               </div>
