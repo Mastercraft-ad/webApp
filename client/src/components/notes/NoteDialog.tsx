@@ -17,8 +17,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { Badge } from '@/components/ui/badge'
-import { X, Plus } from 'lucide-react'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { X, Plus, BookOpen, ChevronRight } from 'lucide-react'
 import type { Note, Category, Tag } from '@shared/schema'
 
 interface NoteDialogProps {
@@ -50,6 +56,52 @@ const TEMPLATE_OPTIONS = [
   { value: 'prayer', label: 'Prayer Request' },
 ]
 
+// Bible books for verse linking
+const BIBLE_BOOKS = [
+  // Old Testament
+  'Genesis', 'Exodus', 'Leviticus', 'Numbers', 'Deuteronomy',
+  'Joshua', 'Judges', 'Ruth', '1 Samuel', '2 Samuel',
+  '1 Kings', '2 Kings', '1 Chronicles', '2 Chronicles',
+  'Ezra', 'Nehemiah', 'Esther', 'Job', 'Psalms', 'Proverbs',
+  'Ecclesiastes', 'Song of Solomon', 'Isaiah', 'Jeremiah', 'Lamentations',
+  'Ezekiel', 'Daniel', 'Hosea', 'Joel', 'Amos', 'Obadiah',
+  'Jonah', 'Micah', 'Nahum', 'Habakkuk', 'Zephaniah', 'Haggai',
+  'Zechariah', 'Malachi',
+  // New Testament
+  'Matthew', 'Mark', 'Luke', 'John', 'Acts',
+  'Romans', '1 Corinthians', '2 Corinthians', 'Galatians', 'Ephesians',
+  'Philippians', 'Colossians', '1 Thessalonians', '2 Thessalonians',
+  '1 Timothy', '2 Timothy', 'Titus', 'Philemon', 'Hebrews',
+  'James', '1 Peter', '2 Peter', '1 John', '2 John', '3 John',
+  'Jude', 'Revelation',
+]
+
+// Chapter counts per book (simplified - using common counts)
+const CHAPTER_COUNTS: Record<string, number> = {
+  'Genesis': 50, 'Exodus': 40, 'Leviticus': 27, 'Numbers': 36, 'Deuteronomy': 34,
+  'Joshua': 24, 'Judges': 21, 'Ruth': 4, '1 Samuel': 31, '2 Samuel': 24,
+  '1 Kings': 22, '2 Kings': 25, '1 Chronicles': 29, '2 Chronicles': 36,
+  'Ezra': 10, 'Nehemiah': 13, 'Esther': 10, 'Job': 42, 'Psalms': 150, 'Proverbs': 31,
+  'Ecclesiastes': 12, 'Song of Solomon': 8, 'Isaiah': 66, 'Jeremiah': 52, 'Lamentations': 5,
+  'Ezekiel': 48, 'Daniel': 12, 'Hosea': 14, 'Joel': 3, 'Amos': 9, 'Obadiah': 1,
+  'Jonah': 4, 'Micah': 7, 'Nahum': 3, 'Habakkuk': 3, 'Zephaniah': 3, 'Haggai': 2,
+  'Zechariah': 14, 'Malachi': 4,
+  'Matthew': 28, 'Mark': 16, 'Luke': 24, 'John': 21, 'Acts': 28,
+  'Romans': 16, '1 Corinthians': 16, '2 Corinthians': 13, 'Galatians': 6, 'Ephesians': 6,
+  'Philippians': 4, 'Colossians': 4, '1 Thessalonians': 5, '2 Thessalonians': 3,
+  '1 Timothy': 6, '2 Timothy': 4, 'Titus': 3, 'Philemon': 1, 'Hebrews': 13,
+  'James': 5, '1 Peter': 5, '2 Peter': 3, '1 John': 5, '2 John': 1, '3 John': 1,
+  'Jude': 1, 'Revelation': 22,
+}
+
+interface VerseLink {
+  id: string
+  book: string
+  chapter: number
+  verse?: number
+  verseEnd?: number
+}
+
 export function NoteDialog({
   open,
   onOpenChange,
@@ -67,6 +119,14 @@ export function NoteDialog({
   const [template, setTemplate] = useState('')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [newTagName, setNewTagName] = useState('')
+  
+  // Verse linking state
+  const [verseLinks, setVerseLinks] = useState<VerseLink[]>([])
+  const [verseLinkOpen, setVerseLinkOpen] = useState(false)
+  const [selectedBook, setSelectedBook] = useState('')
+  const [selectedChapter, setSelectedChapter] = useState<number | null>(null)
+  const [selectedVerse, setSelectedVerse] = useState('')
+  const [selectedVerseEnd, setSelectedVerseEnd] = useState('')
 
   useEffect(() => {
     if (note) {
@@ -75,6 +135,8 @@ export function NoteDialog({
       setCategoryId(note.categoryId || '')
       setColor(note.color || '')
       setTemplate(note.template || '')
+      // Mock verse links for editing
+      setVerseLinks([])
     } else {
       setTitle('')
       setContent('')
@@ -82,6 +144,7 @@ export function NoteDialog({
       setColor('')
       setTemplate('')
       setSelectedTags([])
+      setVerseLinks([])
     }
   }, [note, open])
 
@@ -94,6 +157,7 @@ export function NoteDialog({
       template: template || null,
       isStandalone: false,
       tags: selectedTags,
+      verseLinks, // Include verse links in save data
     })
     onOpenChange(false)
   }
@@ -109,6 +173,41 @@ export function NoteDialog({
     setSelectedTags((prev) =>
       prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]
     )
+  }
+  
+  // Verse linking functions
+  const handleAddVerseLink = () => {
+    if (selectedBook && selectedChapter) {
+      const newLink: VerseLink = {
+        id: Date.now().toString(),
+        book: selectedBook,
+        chapter: selectedChapter,
+        verse: selectedVerse ? parseInt(selectedVerse) : undefined,
+        verseEnd: selectedVerseEnd ? parseInt(selectedVerseEnd) : undefined,
+      }
+      setVerseLinks(prev => [...prev, newLink])
+      // Reset selections
+      setSelectedBook('')
+      setSelectedChapter(null)
+      setSelectedVerse('')
+      setSelectedVerseEnd('')
+      setVerseLinkOpen(false)
+    }
+  }
+  
+  const handleRemoveVerseLink = (id: string) => {
+    setVerseLinks(prev => prev.filter(link => link.id !== id))
+  }
+  
+  const formatVerseLink = (link: VerseLink) => {
+    let ref = `${link.book} ${link.chapter}`
+    if (link.verse) {
+      ref += `:${link.verse}`
+      if (link.verseEnd && link.verseEnd > link.verse) {
+        ref += `-${link.verseEnd}`
+      }
+    }
+    return ref
   }
 
   return (
@@ -182,6 +281,155 @@ export function NoteDialog({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+          
+          {/* Verse Linking Section */}
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2">
+              <BookOpen className="h-4 w-4" />
+              Linked Bible Verses
+            </Label>
+            
+            {/* Display linked verses */}
+            {verseLinks.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-2">
+                {verseLinks.map(link => (
+                  <Badge 
+                    key={link.id} 
+                    variant="secondary" 
+                    className="gap-1 pr-1"
+                    data-testid={`badge-verse-${link.id}`}
+                  >
+                    <BookOpen className="h-3 w-3" />
+                    {formatVerseLink(link)}
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      className="h-4 w-4 p-0 ml-1"
+                      onClick={() => handleRemoveVerseLink(link.id)}
+                      data-testid={`button-remove-verse-${link.id}`}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </Badge>
+                ))}
+              </div>
+            )}
+            
+            {/* Add verse link popover */}
+            <Popover open={verseLinkOpen} onOpenChange={setVerseLinkOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-1"
+                  data-testid="button-add-verse-link"
+                >
+                  <Plus className="h-4 w-4" />
+                  Link a Bible Verse
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80" align="start">
+                <div className="space-y-3">
+                  <div className="font-medium text-sm">Select Bible Reference</div>
+                  
+                  {/* Book Selection */}
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Book</Label>
+                    <Select value={selectedBook} onValueChange={(v) => { setSelectedBook(v); setSelectedChapter(null); }}>
+                      <SelectTrigger data-testid="select-verse-book">
+                        <SelectValue placeholder="Select book" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <ScrollArea className="h-60">
+                          {BIBLE_BOOKS.map(book => (
+                            <SelectItem key={book} value={book}>{book}</SelectItem>
+                          ))}
+                        </ScrollArea>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* Chapter Selection */}
+                  {selectedBook && (
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Chapter</Label>
+                      <Select 
+                        value={selectedChapter?.toString() || ''} 
+                        onValueChange={(v) => setSelectedChapter(parseInt(v))}
+                      >
+                        <SelectTrigger data-testid="select-verse-chapter">
+                          <SelectValue placeholder="Select chapter" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <ScrollArea className="h-40">
+                            {Array.from({ length: CHAPTER_COUNTS[selectedBook] || 1 }, (_, i) => (
+                              <SelectItem key={i + 1} value={(i + 1).toString()}>
+                                Chapter {i + 1}
+                              </SelectItem>
+                            ))}
+                          </ScrollArea>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  
+                  {/* Verse Range */}
+                  {selectedChapter && (
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Verse (optional)</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          min="1"
+                          placeholder="From"
+                          value={selectedVerse}
+                          onChange={(e) => setSelectedVerse(e.target.value)}
+                          className="w-20"
+                          data-testid="input-verse-start"
+                        />
+                        <span className="text-muted-foreground">-</span>
+                        <Input
+                          type="number"
+                          min="1"
+                          placeholder="To"
+                          value={selectedVerseEnd}
+                          onChange={(e) => setSelectedVerseEnd(e.target.value)}
+                          className="w-20"
+                          data-testid="input-verse-end"
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Preview and Add button */}
+                  {selectedBook && selectedChapter && (
+                    <div className="pt-2 border-t border-border">
+                      <div className="text-sm mb-2 flex items-center gap-1">
+                        <ChevronRight className="h-3 w-3" />
+                        <span className="text-muted-foreground">Preview:</span>
+                        <span className="font-medium">
+                          {selectedBook} {selectedChapter}
+                          {selectedVerse && `:${selectedVerse}`}
+                          {selectedVerseEnd && selectedVerse && `-${selectedVerseEnd}`}
+                        </span>
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="w-full"
+                        onClick={handleAddVerseLink}
+                        data-testid="button-confirm-verse-link"
+                      >
+                        Add Verse Link
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div className="space-y-2">

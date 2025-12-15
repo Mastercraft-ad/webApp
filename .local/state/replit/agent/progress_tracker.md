@@ -109,21 +109,46 @@ Build a comprehensive Personal Note-Taking System integrated with a Bible study 
 - [x] Sermon discussion comments
 - [x] FullPagePlayer component updated to accept comments and addComment as props (December 5, 2024)
 
+## New Features Added - December 15, 2024 (MOCKUP UI)
+- [x] Verse Linking UI - Bible verse picker dialog in note editor
+  - [x] Book/chapter/verse selector with all 66 Bible books
+  - [x] Verse range support (e.g., John 3:16-18)
+  - [x] Verse badges displayed on note cards
+  - [x] Remove verse links functionality
+- [x] Advanced Filters Panel
+  - [x] Filter by category dropdown
+  - [x] Filter by tag dropdown
+  - [x] Filter by color dropdown
+  - [x] Date range picker (from/to)
+  - [x] Active filter chips with remove option
+  - [x] Clear all filters button
+- [x] Favorites/Pinned Notes
+  - [x] Star/pin icon on each note card
+  - [x] Pinned notes section at top of list
+  - [x] Toggle pin from dropdown menu
+  - [x] Visual indicator for pinned state
+- [x] Bulk Operations
+  - [x] Selection mode toggle button
+  - [x] Checkbox on each note when in selection mode
+  - [x] Select All / Deselect All buttons
+  - [x] Bulk action toolbar (Move, Tag, Delete)
+  - [x] Selected count display
+- [x] Note Sharing UI
+  - [x] Share button in note dropdown menu
+  - [x] Share dialog with email input
+  - [x] Permission selector (View/Edit)
+  - [x] List of current shares with avatars
+  - [x] Remove share functionality
+
 ## Features In Progress / Pending
-- [ ] Verse linking UI (allow users to link specific Bible verses to notes)
 - [ ] Folder system UI for hierarchical organization
 - [ ] Image and audio attachments
 - [ ] Voice-to-text integration
-- [ ] Note sharing and collaboration UI
 - [ ] Version history UI and restore functionality
 - [ ] Export functionality (PDF, Markdown, JSON)
 - [ ] Print functionality
-- [ ] Filter by category, tag, color
-- [ ] Advanced search (by date, category, tags)
 - [ ] Sorting options (by date, title, category)
-- [ ] Bulk operations (delete, move, tag)
 - [ ] Note templates customization
-- [ ] Favorites/pinned notes
 - [ ] Note archiving
 
 ## Technical Stack
