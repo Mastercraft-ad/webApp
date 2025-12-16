@@ -241,7 +241,8 @@ Build a comprehensive Personal Note-Taking System integrated with a Bible study 
   - [x] Daily Reading card → navigates to /bible
   - [x] Sunday Sermon card → navigates to /audio
   - [x] Bible Study card → navigates to /groups
-- [x] Removed Community page (/community) - Forums page now handles community discussions
+- [x] Removed Community page (/community)
+- [x] Removed Forums page (/forums) - Focus on Study Groups for community features
 
 ## Re-Migration Checklist - December 16, 2024 (Second Migration)
 - [x] Install the required packages (npm install - 522 packages already up to date)

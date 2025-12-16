@@ -17,7 +17,6 @@ import CoursesPage from "@/pages/courses";
 import KidsPage from "@/pages/kids";
 import AuthPage from "@/pages/auth";
 import DevotionalPage from "@/pages/devotional";
-import ForumsPage from "@/pages/forums";
 
 function Router() {
   return (
@@ -38,7 +37,6 @@ function Router() {
       <Route path="/devotional" component={DevotionalPage} />
       <Route path="/bible" component={BiblePage} />
       <Route path="/audio" component={AudioPage} />
-      <Route path="/forums" component={ForumsPage} />
       <Route path="/prayer" component={PrayerPage} />
       <Route path="/groups" component={GroupsPage} />
       <Route path="/events" component={EventsPage} />

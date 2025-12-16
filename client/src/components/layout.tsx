@@ -16,7 +16,6 @@ import {
   Library,
   Baby,
   Sun,
-  MessageSquare,
   PanelLeftClose,
   PanelLeftOpen
 } from "lucide-react";
@@ -52,7 +51,6 @@ export default function Layout({ children, hideSidebar = false }: LayoutProps) {
     { name: "Reading Plans", href: "/plans", icon: Bookmark },
     { name: "Courses & Learning", href: "/courses", icon: GraduationCap },
     { name: "Audio & Sermons", href: "/audio", icon: Music },
-    { name: "Forums", href: "/forums", icon: MessageSquare },
     { name: "Prayer", href: "/prayer", icon: Heart },
     { name: "Study Groups", href: "/groups", icon: Library },
     { name: "Events", href: "/events", icon: Calendar },
