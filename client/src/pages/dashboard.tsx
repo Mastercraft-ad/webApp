@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "wouter";
 
 export default function Dashboard() {
   return (
@@ -57,61 +58,67 @@ export default function Dashboard() {
 
         {/* Quick Access Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-blue-500">
-            <CardContent className="p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
-                  <BookOpen className="h-5 w-5" />
+          <Link href="/bible" data-testid="link-daily-reading">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-blue-500">
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
+                    <BookOpen className="h-5 w-5" />
+                  </div>
+                  <Badge variant="secondary" className="font-normal">Today</Badge>
                 </div>
-                <Badge variant="secondary" className="font-normal">Today</Badge>
-              </div>
-              <h3 className="font-semibold text-lg mb-1">Daily Reading</h3>
-              <p className="text-muted-foreground text-sm mb-4">Romans 8:1-12</p>
-              <Progress value={33} className="h-1.5 mb-2" />
-              <p className="text-xs text-muted-foreground">5 mins left</p>
-            </CardContent>
-          </Card>
+                <h3 className="font-semibold text-lg mb-1">Daily Reading</h3>
+                <p className="text-muted-foreground text-sm mb-4">Romans 8:1-12</p>
+                <Progress value={33} className="h-1.5 mb-2" />
+                <p className="text-xs text-muted-foreground">5 mins left</p>
+              </CardContent>
+            </Card>
+          </Link>
 
-          <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-purple-500">
-            <CardContent className="p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg text-purple-600 dark:text-purple-400">
-                  <Play className="h-5 w-5" />
+          <Link href="/audio" data-testid="link-sunday-sermon">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-purple-500">
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg text-purple-600 dark:text-purple-400">
+                    <Play className="h-5 w-5" />
+                  </div>
+                  <Badge variant="secondary" className="font-normal">Resume</Badge>
                 </div>
-                <Badge variant="secondary" className="font-normal">Resume</Badge>
-              </div>
-              <h3 className="font-semibold text-lg mb-1">Sunday Sermon</h3>
-              <p className="text-muted-foreground text-sm mb-4">The Power of Grace</p>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Clock className="h-3 w-3" />
-                <span>12:30 / 45:00</span>
-              </div>
-            </CardContent>
-          </Card>
+                <h3 className="font-semibold text-lg mb-1">Sunday Sermon</h3>
+                <p className="text-muted-foreground text-sm mb-4">The Power of Grace</p>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Clock className="h-3 w-3" />
+                  <span>12:30 / 45:00</span>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
 
-          <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-amber-500">
-            <CardContent className="p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg text-amber-600 dark:text-amber-400">
-                  <Calendar className="h-5 w-5" />
+          <Link href="/groups" data-testid="link-bible-study">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-amber-500">
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg text-amber-600 dark:text-amber-400">
+                    <Calendar className="h-5 w-5" />
+                  </div>
+                  <Badge variant="secondary" className="font-normal">Upcoming</Badge>
                 </div>
-                <Badge variant="secondary" className="font-normal">Upcoming</Badge>
-              </div>
-              <h3 className="font-semibold text-lg mb-1">Bible Study</h3>
-              <p className="text-muted-foreground text-sm mb-4">Tonight at 7:00 PM</p>
-              <div className="flex -space-x-2 overflow-hidden">
-                 <Avatar className="inline-block h-6 w-6 ring-2 ring-background">
-                  <AvatarImage src="https://github.com/shadcn.png" />
-                </Avatar>
-                <Avatar className="inline-block h-6 w-6 ring-2 ring-background">
-                  <AvatarFallback>CN</AvatarFallback>
-                </Avatar>
-                <Avatar className="inline-block h-6 w-6 ring-2 ring-background">
-                  <AvatarFallback>+3</AvatarFallback>
-                </Avatar>
-              </div>
-            </CardContent>
-          </Card>
+                <h3 className="font-semibold text-lg mb-1">Bible Study</h3>
+                <p className="text-muted-foreground text-sm mb-4">Tonight at 7:00 PM</p>
+                <div className="flex -space-x-2 overflow-hidden">
+                  <Avatar className="inline-block h-6 w-6 ring-2 ring-background">
+                    <AvatarImage src="https://github.com/shadcn.png" />
+                  </Avatar>
+                  <Avatar className="inline-block h-6 w-6 ring-2 ring-background">
+                    <AvatarFallback>CN</AvatarFallback>
+                  </Avatar>
+                  <Avatar className="inline-block h-6 w-6 ring-2 ring-background">
+                    <AvatarFallback>+3</AvatarFallback>
+                  </Avatar>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
 
           <Card className="bg-primary text-primary-foreground hover:bg-primary/90 transition-colors cursor-pointer flex flex-col justify-center items-center text-center p-6">
              <h3 className="font-serif text-2xl italic mb-2">Give</h3>
