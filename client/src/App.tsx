@@ -8,7 +8,6 @@ import LandingPage from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import BiblePage from "@/pages/bible";
 import AudioPage from "@/pages/audio";
-import CommunityPage from "@/pages/community";
 import PrayerPage from "@/pages/prayer";
 import GroupsPage from "@/pages/groups";
 import EventsPage from "@/pages/events";
@@ -39,7 +38,6 @@ function Router() {
       <Route path="/devotional" component={DevotionalPage} />
       <Route path="/bible" component={BiblePage} />
       <Route path="/audio" component={AudioPage} />
-      <Route path="/community" component={CommunityPage} />
       <Route path="/forums" component={ForumsPage} />
       <Route path="/prayer" component={PrayerPage} />
       <Route path="/groups" component={GroupsPage} />

@@ -241,6 +241,7 @@ Build a comprehensive Personal Note-Taking System integrated with a Bible study 
   - [x] Daily Reading card → navigates to /bible
   - [x] Sunday Sermon card → navigates to /audio
   - [x] Bible Study card → navigates to /groups
+- [x] Removed Community page (/community) - Forums page now handles community discussions
 
 ## Next Steps
 1. Add image and audio attachment capabilities
